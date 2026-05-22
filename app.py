@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for the Premium Dark Dashboard
+# Custom CSS for Premium Dark UI & Typography
 st.markdown("""
     <style>
     .metric-card {
@@ -43,9 +43,13 @@ st.markdown("""
     .indian-words {
         color: #38bdf8;
         font-size: 0.85rem;
-        margin-top: -12px;
-        margin-bottom: 12px;
+        margin-top: -5px;
+        margin-bottom: 15px;
         font-weight: 500;
+    }
+    .crisis-text {
+        font-weight: bold;
+        font-size: 0.9rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -77,92 +81,120 @@ def format_indian_words(number):
     return " ".join(result)
 
 # ==========================================
-# SIDEBAR: THE INPUT VAULT
+# SIDEBAR: CLEAN EXPANDER COMPRESSION
 # ==========================================
 st.sidebar.title("🛡️ The Reality Vault")
-st.sidebar.markdown("Enter your baseline operational numbers.")
+st.sidebar.markdown("Establish your baseline before running stress tests.")
 
-# --- SECTION 1: EXPENSES ---
-st.sidebar.header("1. What it Costs to Live")
+# --- EXPANDER 1: OUTFLOWS ---
+with st.sidebar.expander("📁 1. What it Costs to Live", expanded=True):
+    monthly_burn = st.number_input(
+        "Monthly Household Expenses (₹)", 
+        min_value=10000, max_value=1000000, value=100000, step=10000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(monthly_burn)}</div>', unsafe_allow_html=True)
 
-monthly_burn = st.sidebar.number_input(
-    "Monthly Household Expenses (₹)", 
-    min_value=10000, max_value=1000000, value=100000, step=10000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(monthly_burn)} per month</div>', unsafe_allow_html=True)
+    annual_spikes = st.number_input(
+        "Annual Large Expenses (Insurance, School Fees) (₹)", 
+        min_value=0, max_value=5000000, value=240000, step=20000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(annual_spikes)}</div>', unsafe_allow_html=True)
 
-annual_spikes = st.sidebar.number_input(
-    "Annual Bulk Expenses (Insurance, School Fees, etc.) (₹)", 
-    min_value=0, max_value=5000000, value=240000, step=20000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(annual_spikes)} per year</div>', unsafe_allow_html=True)
+# --- EXPANDER 2: ASSETS ---
+with st.sidebar.expander("📁 2. Your Current Assets", expanded=False):
+    equity_base = st.number_input(
+        "Stocks & Mutual Funds (₹)", 
+        min_value=0, value=12000000, step=500000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(equity_base)}</div>', unsafe_allow_html=True)
 
+    debt_base = st.number_input(
+        "Fixed Deposits / EPF / PPF (₹)", 
+        min_value=0, value=9500000, step=500000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(debt_base)}</div>', unsafe_allow_html=True)
 
-# --- SECTION 2: ASSETS ---
-st.sidebar.header("2. Your Current Assets")
+    metals_base = st.number_input(
+        "Gold & Silver (₹)", 
+        min_value=0, value=3000000, step=100000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(metals_base)}</div>', unsafe_allow_html=True)
 
-equity_base = st.sidebar.number_input(
-    "Stocks & Mutual Funds (₹)", 
-    min_value=0, value=12000000, step=500000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(equity_base)}</div>', unsafe_allow_html=True)
+    real_estate_base = st.number_input(
+        "Your Home Value (₹)", 
+        min_value=0, value=15000000, step=1000000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(real_estate_base)}</div>', unsafe_allow_html=True)
 
-debt_base = st.sidebar.number_input(
-    "Fixed Deposits / EPF / PPF (₹)", 
-    min_value=0, value=9500000, step=500000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(debt_base)}</div>', unsafe_allow_html=True)
+# --- EXPANDER 3: LIABILITIES ---
+with st.sidebar.expander("📁 3. Debts & Loans", expanded=False):
+    home_loan_base = st.number_input(
+        "Home Loan Outstanding (₹)", 
+        min_value=0, value=4500000, step=500000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(home_loan_base)}</div>', unsafe_allow_html=True)
 
-metals_base = st.sidebar.number_input(
-    "Gold & Silver (₹)", 
-    min_value=0, value=3000000, step=100000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(metals_base)}</div>', unsafe_allow_html=True)
+    other_loan_base = st.number_input(
+        "Other Loans (Car / Personal) (₹)", 
+        min_value=0, value=800000, step=100000
+    )
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(other_loan_base)}</div>', unsafe_allow_html=True)
 
-real_estate_base = st.sidebar.number_input(
-    "Your Home Value (₹)", 
-    min_value=0, value=15000000, step=1000000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(real_estate_base)}</div>', unsafe_allow_html=True)
-
-
-# --- SECTION 3: LIABILITIES ---
-st.sidebar.header("3. Debts & Loans")
-
-home_loan_base = st.sidebar.number_input(
-    "Home Loan Outstanding (₹)", 
-    min_value=0, value=4500000, step=500000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(home_loan_base)}</div>', unsafe_allow_html=True)
-
-other_loan_base = st.sidebar.number_input(
-    "Other Loans (Car / Personal) (₹)", 
-    min_value=0, value=800000, step=100000
-)
-st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(other_loan_base)}</div>', unsafe_allow_html=True)
 
 # ==========================================
-# MAIN DASHBOARD: THE SANDBOX
+# MAIN DASHBOARD: THE CRISIS TEST
 # ==========================================
 st.title("The Pink Slip Index")
-st.markdown("Your interactive survival sandbox. Adjust the sliders below to see exactly what happens to your family's lifestyle if the primary salary stops tomorrow.")
+st.markdown("Your interactive survival sandbox. Adjust the parameters below to gauge your uncompromised safety margin if your salary engine abruptly stops tomorrow.")
 
 st.divider()
 
-# --- THE STRESS TEST SLIDERS ---
-st.subheader("🎛️ The 'What-If' Crash Simulator")
+# --- THE GRIPPING CRISIS SLIDERS ---
+st.subheader("🚨 The Crisis Test")
+st.markdown("Drag these sliders into negative zones to simulate market and lifestyle shocks.")
 
 col_market, col_career = st.columns(2)
 
 with col_market:
-    st.markdown("**Simulate Market Crashes**")
-    equity_shift = st.slider("Stock Market Crash/Rally (%)", min_value=-50, max_value=50, value=0, step=1)
-    metals_shift = st.slider("Gold Price Shift (%)", min_value=-30, max_value=50, value=0, step=1)
+    st.markdown("### Market Meltdowns")
+    equity_shift = st.slider("Stock Market Collapse / Rally (%)", min_value=-50, max_value=30, value=0, step=5)
+    
+    # Dynamic text feedback for the Equity Crisis Slider
+    if equity_shift == 0:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Market Action</span>", unsafe_allow_html=True)
+    elif equity_shift == -10:
+        st.markdown("<span class='crisis-text' style='color:#facc15;'>⚠️ Standard Market Correction</span>", unsafe_allow_html=True)
+    elif -30 <= equity_shift < -10:
+        st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Tech & Structural Sector Crash</span>", unsafe_allow_html=True)
+    elif equity_shift < -30:
+        st.markdown("<span class='crisis-text' style='color:#ef4444;'>🚨 Absolute Global Financial Crisis (2008 Style)</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Sudden Post-Election Bull Run</span>", unsafe_allow_html=True)
+
+    st.write("") # Spacer
+    metals_shift = st.slider("Gold & Silver Volatility (%)", min_value=-20, max_value=40, value=0, step=5)
+    if metals_shift > 0:
+        st.markdown("<span class='crisis-text' style='color:#4ade80;'>🪙 Gold acting as a defensive flight-to-safety shield</span>", unsafe_allow_html=True)
+    elif metals_shift < 0:
+        st.markdown("<span class='crisis-text' style='color:#ef4444;'>📉 Rare liquidity squeeze tracking global panic</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟡 Metals holding steady baseline intrinsic value</span>", unsafe_allow_html=True)
 
 with col_career:
-    st.markdown("**Simulate Sudden Life Emergencies**")
-    expense_shift = st.slider("Sudden Monthly Expense Spike (₹)", min_value=-50000, max_value=100000, value=0, step=5000)
-    re_liquidation = st.slider("Sell Home to Get Quick Cash (₹)", min_value=0, max_value=int(real_estate_base), value=0, step=500000)
+    st.markdown("### Lifestyle Cash Drains")
+    expense_shift = st.slider("Sudden Family Expense Shock (Monthly Spike) (₹)", min_value=0, max_value=150000, value=0, step=10000)
+    if expense_shift > 0:
+        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 Simulating a recurring ₹{expense_shift:,.0f} drain (Medical emergencies / Dependent parent care / School fee hikes)</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Lifestyle operating at optimized baseline burn</span>", unsafe_allow_html=True)
+
+    st.write("") # Spacer
+    re_liquidation = st.slider("Desperation Play: Liquidate Your Home (₹ Realized Capital)", min_value=0, max_value=int(real_estate_base), value=0, step=1000000)
+    if re_liquidation > 0:
+        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Selling home under duress. Injecting ₹{re_liquidation:,.0f} cash into the safety pool but stripping your physical estate asset.</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Home asset remains untouched and intact</span>", unsafe_allow_html=True)
+
 
 # ==========================================
 # THE MATHEMATICAL ENGINE
@@ -201,6 +233,7 @@ else:
 # 3. Walk-Away Metric
 leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
 
+
 # ==========================================
 # VISUALIZING THE METRICS
 # ==========================================
@@ -236,6 +269,7 @@ with col3:
         </div>
     """, unsafe_allow_html=True)
 
+
 # ==========================================
 # ADJUSTED PORTFOLIO & LIABILITIES BASELINE
 # ==========================================
@@ -259,6 +293,7 @@ st.dataframe(
     use_container_width=True,
     hide_index=True
 )
+
 
 # ==========================================
 # FOOTER FUNNEL
