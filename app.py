@@ -51,6 +51,25 @@ st.markdown("""
         font-weight: bold;
         font-size: 0.9rem;
     }
+    .hero-banner {
+        border-radius: 10px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 25px;
+        border: 1px solid dashed;
+    }
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin: 0;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -327,6 +346,41 @@ leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
 st.divider()
 st.subheader("📊 Your Reality")
 
+# --- SPLASHED HERO BANNER AT TOP ---
+if runway_years == 0:
+    banner_bg = "#7f1d1d"       
+    banner_border = "#ef4444"   
+    banner_text = "#fef2f2"     
+    status_label = "🚨 CRISIS ZONE: Immediate Financial Inundation"
+    hero_title_text = "Shield Expired"
+elif runway_years < 1.0:
+    banner_bg = "#7f1d1d"       
+    banner_border = "#ef4444"   
+    banner_text = "#fef2f2"     
+    status_label = "🚨 CRISIS ZONE: High Exposure"
+    hero_title_text = f"You are Pink Slip Proof until Age {age_until_covered:.1f}"
+elif runway_years < 3.0:
+    banner_bg = "#7c2d12"       
+    banner_border = "#f97316"   
+    banner_text = "#fff7ed"     
+    status_label = "⚠️ WARNING ZONE: Limited Armor"
+    hero_title_text = f"You are Pink Slip Proof until Age {age_until_covered:.1f}"
+else:
+    banner_bg = "#064e3b"       
+    banner_border = "#10b981"   
+    banner_text = "#ecfdf5"     
+    status_label = "🟢 SAFETY POOL: Uncompromised Lifestyle Secure"
+    hero_title_text = f"You are Pink Slip Proof until Age {age_until_covered:.1f}"
+
+st.markdown(f"""
+    <div class="hero-banner" style="background-color: {banner_bg}; border-color: {banner_border}; color: {banner_text};">
+        <div class="hero-subtitle">{status_label}</div>
+        <div class="hero-title">{hero_title_text}</div>
+    </div>
+""", unsafe_allow_html=True)
+
+
+# --- INDIVIDUAL METRIC CARDS ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -334,7 +388,7 @@ with col1:
         <div class="metric-card">
             <div class="metric-title">Pink Slip Runway</div>
             <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1.1rem; color: #94a3b8;">Mos</span> <span style="font-size: 1.5rem; color: #38bdf8; font-weight:700;">({runway_years:.1f} Yrs)</span></div>
-            <div class="metric-sub">👇 Zero-Income Shield covers you until Age {age_until_covered:.1f}</div>
+            <div class="metric-sub">Net survival window against active liabilities</div>
         </div>
     """, unsafe_allow_html=True)
 
