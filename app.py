@@ -305,7 +305,7 @@ total_debts = st.session_state.home_loan_base + st.session_state.other_loan_base
 total_liquid_assets = adj_equity + adj_debt + adj_metals + re_liquidation
 net_liquid_buffer = total_liquid_assets - total_debts
 
-# 1. Pink Slip Runway Calculation (Months + Years translation)
+# 1. Pink Slip Runway Calculation (Precision float logic for backend checks)
 if adj_monthly_burn > 0:
     if net_liquid_buffer > 0:
         runway_months = net_liquid_buffer / adj_monthly_burn
@@ -346,7 +346,10 @@ leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
 st.divider()
 st.subheader("📊 Your Reality")
 
-# --- SPLASHED HERO BANNER AT TOP ---
+# BRUTAL SEMANTIC FIX: Cast the rounded age directly down to an clean integer milestone
+display_age_whole_number = int(age_until_covered)
+
+# --- SPLASHED HERO BANNER AT TOP WITH WHOLENUMBER AGE ROUNDDOWN ---
 if runway_years == 0:
     banner_bg = "#7f1d1d"       
     banner_border = "#ef4444"   
@@ -358,19 +361,19 @@ elif runway_years < 1.0:
     banner_border = "#ef4444"   
     banner_text = "#fef2f2"     
     status_label = "🚨 CRISIS ZONE: High Exposure"
-    hero_title_text = f"You are Pink Slip Proof until Age {age_until_covered:.1f}"
+    hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 elif runway_years < 3.0:
     banner_bg = "#7c2d12"       
     banner_border = "#f97316"   
     banner_text = "#fff7ed"     
     status_label = "⚠️ WARNING ZONE: Limited Armor"
-    hero_title_text = f"You are Pink Slip Proof until Age {age_until_covered:.1f}"
+    hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 else:
     banner_bg = "#064e3b"       
     banner_border = "#10b981"   
     banner_text = "#ecfdf5"     
     status_label = "🟢 SAFETY POOL: Uncompromised Lifestyle Secure"
-    hero_title_text = f"You are Pink Slip Proof until Age {age_until_covered:.1f}"
+    hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 
 st.markdown(f"""
     <div class="hero-banner" style="background-color: {banner_bg}; border-color: {banner_border}; color: {banner_text};">
