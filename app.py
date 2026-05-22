@@ -18,7 +18,7 @@ st.markdown("""
         background-color: #1e293b;
         border: 1px solid #334155;
         border-radius: 10px;
-        padding: 20px;
+        padding: 24px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .metric-title {
@@ -293,20 +293,17 @@ with col_career:
 # ==========================================
 # THE MATHEMATICAL SIMULATION ENGINE 
 # ==========================================
-# Apply the immediate slider shocks to baseline assets
 sim_equity = st.session_state.equity_base * (1 + (equity_shift / 100))
 sim_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
 sim_debt = st.session_state.debt_base
 adj_home_value = st.session_state.real_estate_base - re_liquidation
 
-# Today's starting baseline monthly outflow
 standardized_annual_monthly_addon = st.session_state.annual_spikes / 12
 active_monthly_burn = st.session_state.monthly_burn + expense_shift + standardized_annual_monthly_addon + simulated_monthly_rent
 
 total_debts = st.session_state.home_loan_base + st.session_state.other_loan_base
 
-# Clear loans off the baseline immediately from our available liquid assets
-# Order of liquidation for debt clearing: Debt assets -> Equities -> Metals
+# Immediate asset settlement for loan matching
 remaining_debt_to_clear = total_debts
 
 if sim_debt >= remaining_debt_to_clear:
@@ -332,30 +329,24 @@ if remaining_debt_to_clear > 0:
         remaining_debt_to_clear -= sim_metals
         sim_metals = 0
 
-# Add property cash directly to debt asset drawer if realized
 sim_debt += re_liquidation
 
-# --- COMPREHENSIVE SIMULATION LOOP (GROWTH VS INFLATION) ---
-# Monthly growth targets: Equities 10% YoY, Fixed income 6% YoY, Metals 5% YoY. Expenses scaling 6% inflation.
+# --- CORE SIMULATION MONTHLY TIMELINE LOOP ---
 runway_months = 0
-max_sim_months = 600 # 50-year security limit
+max_sim_months = 600 
 
 while runway_months < max_sim_months:
-    # 1. Grow remaining assets by 1 month of interest
     sim_equity *= (1 + (0.10 / 12))
     sim_debt *= (1 + (0.06 / 12))
     sim_metals *= (1 + (0.05 / 12))
     
     total_liquid_pool = sim_equity + sim_debt + sim_metals
     
-    # Check if pool is broke
     if total_liquid_pool < active_monthly_burn:
         break
         
-    # 2. Spend the money based on our standard liquid hierarchy
     shortfall = active_monthly_burn
     
-    # Drain from Fixed Income pots first
     if sim_debt >= shortfall:
         sim_debt -= shortfall
         shortfall = 0
@@ -363,7 +354,6 @@ while runway_months < max_sim_months:
         shortfall -= sim_debt
         sim_debt = 0
         
-    # Next, liquidate Equity portfolios
     if shortfall > 0:
         if sim_equity >= shortfall:
             sim_equity -= shortfall
@@ -372,7 +362,6 @@ while runway_months < max_sim_months:
             shortfall -= sim_equity
             sim_equity = 0
             
-    # Finally, dip into precious metals
     if shortfall > 0:
         if sim_metals >= shortfall:
             sim_metals -= shortfall
@@ -382,16 +371,13 @@ while runway_months < max_sim_months:
             sim_metals = 0
             
     runway_months += 1
-    
-    # 3. Scale up burn costs by 6% inflation every 12 months
     if runway_months % 12 == 0:
         active_monthly_burn *= 1.06
 
 runway_years = runway_months / 12
 age_until_covered = st.session_state.current_age + runway_years
 
-# --- RE-SIMULATE TOTAL SYSTEM ASSETS FOR LONG TERM RETIREMENT LOCKDOWN ---
-# Re-running the calculation including remaining home values to see lifetime safety caps
+# --- RE-SIMULATE INTEGRATED VALUATION FOR TOTAL LIFETIME SECURITY ---
 sim_equity_lt = st.session_state.equity_base * (1 + (equity_shift / 100))
 sim_metals_lt = st.session_state.metals_base * (1 + (metals_shift / 100))
 sim_debt_lt = st.session_state.debt_base + re_liquidation
@@ -401,12 +387,6 @@ lt_monthly_burn = st.session_state.monthly_burn + expense_shift + standardized_a
 lt_debt_remaining = total_debts
 funded_years = 0
 
-# Baseline reference target comparison check
-initial_liquid = (sim_equity_lt + sim_metals_lt + sim_debt_lt) - total_debts
-target_fire_corpus = ((lt_monthly_burn * 12) * 25) + total_debts
-old_age_safety_pct = ((initial_liquid + sim_home_lt) / target_fire_corpus) * 100 if target_fire_corpus > 0 else 100.0
-
-# Long term calendar projection
 for yr in range(1, 51):
     combined_lt_pool = (sim_equity_lt + sim_metals_lt + sim_debt_lt + sim_home_lt) - lt_debt_remaining
     annual_cost = lt_monthly_burn * 12
@@ -414,22 +394,17 @@ for yr in range(1, 51):
     if combined_lt_pool < annual_cost:
         break
         
-    # Subtract costs and compound net balance forward
     sim_debt_lt = (sim_debt_lt + sim_equity_lt + sim_metals_lt + sim_home_lt) - lt_debt_remaining - annual_cost
     sim_equity_lt = 0
     sim_metals_lt = 0
     sim_home_lt = 0
     lt_debt_remaining = 0
     
-    # Grow the consolidated pool at a conservative blended rate of 6%
     sim_debt_lt *= 1.06
     lt_monthly_burn *= 1.06
     funded_years += 1
 
 max_safe_age = min(st.session_state.current_age + funded_years, 100)
-
-# 3. Walk-Away Metric
-leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
 
 
 # ==========================================
@@ -451,19 +426,19 @@ elif runway_years < 1.0:
     banner_bg = "#7f1d1d"       
     banner_border = "#ef4444"   
     banner_text = "#fef2f2"     
-    status_label = "🚨 CRISIS ZONE: High Exposure (Returns vs 6% Inflation Active)"
+    status_label = "🚨 CRISIS ZONE: High Exposure"
     hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 elif runway_years < 3.0:
     banner_bg = "#7c2d12"       
     banner_border = "#f97316"   
     banner_text = "#fff7ed"     
-    status_label = "⚠️ WARNING ZONE: Limited Armor (Returns vs 6% Inflation Active)"
+    status_label = "⚠️ WARNING ZONE: Limited Armor"
     hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 else:
     banner_bg = "#064e3b"       
     banner_border = "#10b981"   
     banner_text = "#ecfdf5"     
-    status_label = "🟢 SAFETY POOL: Uncompromised Lifestyle Secure (Returns vs 6% Inflation Active)"
+    status_label = "🟢 SAFETY POOL: Uncompromised Lifestyle Secure"
     hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 
 st.markdown(f"""
@@ -474,50 +449,35 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# --- INDIVIDUAL METRIC CARDS ---
-col1, col2, col3 = st.columns(3)
+# --- TWO-CARD METRIC GRID COMPRESSION ---
+col1, col2 = st.columns(2)
 
 with col1:
     st.markdown(f"""
         <div class="metric-card">
             <div class="metric-title">Pink Slip Runway</div>
             <div class="metric-value">{runway_months:,.0f} <span style="font-size: 1.1rem; color: #94a3b8;">Mos</span> <span style="font-size: 1.5rem; color: #38bdf8; font-weight:700;">({runway_years:.1f} Yrs)</span></div>
-            <div class="metric-sub">Factoring portfolio returns matching inflation step-ups</div>
+            <div class="metric-sub">Portfolio gain - inflation 6%</div>
         </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    if max_safe_age >= st.session_state.current_age + 50:
-        lockdown_label = "Complete Lifetime Sovereignty"
-    else:
-        lockdown_label = f"Lifestyle Funded Until Age {int(max_safe_age)} (Inflation Adjusted)"
-        
     st.markdown(f"""
         <div class="metric-card">
             <div class="metric-title">Retirement Lockdown</div>
-            <div class="metric-value">{old_age_safety_pct:,.1f}%</div>
-            <div class="metric-sub">{lockdown_label}</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">The Walk-Away Metric</div>
-            <div class="metric-value">{leverage_score:,.2f} <span style="font-size: 1rem; color: #94a3b8;">/ 1.00</span></div>
-            <div class="metric-sub">1.00 = 10-year debt-free inflation-adjusted runway</div>
+            <div class="metric-value">Life Secured until Age {int(max_safe_age)}</div>
+            <div class="metric-sub">The exact milestone your total estate assets completely run out</div>
         </div>
     """, unsafe_allow_html=True)
 
 
 # ==========================================
-# ADJUSTED PORTFOLIO BASELINE DISPLAY
+# ADJUSTED PORTFOLIO BASELINE GRID
 # ==========================================
 st.write("")
 st.write("")
 st.subheader("🔄 What Your Balance Sheet Looks Like Now")
 
-# Recalculating shocked snapshot variables for display grid
 disp_equity = st.session_state.equity_base * (1 + (equity_shift / 100))
 disp_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
 
