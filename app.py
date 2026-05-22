@@ -323,10 +323,8 @@ if remaining_debt_to_clear > 0:
 
 if remaining_debt_to_clear > 0:
     if sim_metals >= remaining_debt_to_clear:
-        sim_metals -= remaining_debt_to_clear
         remaining_debt_to_clear = 0
     else:
-        remaining_debt_to_clear -= sim_metals
         sim_metals = 0
 
 sim_debt += re_liquidation
@@ -428,12 +426,6 @@ elif runway_years < 1.0:
     banner_text = "#fef2f2"     
     status_label = "🚨 CRISIS ZONE: High Exposure"
     hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
-elif runway_years < 3.0:
-    banner_bg = "#7c2d12"       
-    banner_border = "#f97316"   
-    banner_text = "#fff7ed"     
-    status_label = "⚠️ WARNING ZONE: Limited Armor"
-    hero_title_text = f"You are Pink Slip Proof until Age {display_age_whole_number}"
 else:
     banner_bg = "#064e3b"       
     banner_border = "#10b981"   
@@ -449,24 +441,24 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# --- TWO-CARD METRIC GRID COMPRESSION ---
+# --- TWO-CARD METRIC GRID COMPRESSION (IMMEDIATE vs TOTAL SHIELD) ---
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">Pink Slip Runway</div>
+            <div class="metric-title">Immediate Shield (Liquid Money)</div>
             <div class="metric-value">{runway_months:,.0f} <span style="font-size: 1.1rem; color: #94a3b8;">Mos</span> <span style="font-size: 1.5rem; color: #38bdf8; font-weight:700;">({runway_years:.1f} Yrs)</span></div>
-            <div class="metric-sub">Portfolio gain - inflation 6%</div>
+            <div class="metric-sub">Portfolio gain - inflation 6% (Keeping your home roof intact)</div>
         </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">Retirement Lockdown</div>
+            <div class="metric-title">Total Shield (Total Estate)</div>
             <div class="metric-value">Life Secured until Age {int(max_safe_age)}</div>
-            <div class="metric-sub">The exact milestone your total estate assets completely run out</div>
+            <div class="metric-sub">The exact absolute milestone if you sell the home for emergency funds</div>
         </div>
     """, unsafe_allow_html=True)
 
