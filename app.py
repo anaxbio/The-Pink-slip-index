@@ -215,3 +215,188 @@ with col_market:
     elif -30 <= equity_shift < -10:
         st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Tech & Structural Sector Crash</span>", unsafe_allow_html=True)
     elif equity_shift < -30:
+        st.markdown("<span class='crisis-text' style='color:#ef4444;'>🚨 Absolute Global Financial Crisis (2008 Style)</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Sudden Post-Election Bull Run</span>", unsafe_allow_html=True)
+
+    st.write("") 
+    metals_shift = st.slider(
+        "Gold & Silver Collapse / Rally (%)", 
+        min_value=-20, max_value=40, value=0, step=5,
+        key=f"metals_slider_{st.session_state.reset_trigger}"
+    )
+    if metals_shift > 0:
+        st.markdown("<span class='crisis-text' style='color:#4ade80;'>🪙 Gold acting as a defensive flight-to-safety shield</span>", unsafe_allow_html=True)
+    elif metals_shift < 0:
+        st.markdown("<span class='crisis-text' style='color:#ef4444;'>📉 Rare liquidity squeeze tracking global panic</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟡 Metals holding steady baseline intrinsic value</span>", unsafe_allow_html=True)
+
+with col_career:
+    st.markdown("### Lifestyle Cash Drains")
+    expense_shift = st.slider(
+        "Sudden Family Expense Shock (Monthly Spike) (₹)", 
+        min_value=0, max_value=150000, value=0, step=10000,
+        key=f"expense_slider_{st.session_state.reset_trigger}"
+    )
+    if expense_shift > 0:
+        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 Simulating a recurring ₹{expense_shift:,.0f} drain (Medical / Dependents / Tuition)</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Lifestyle operating at optimized baseline burn</span>", unsafe_allow_html=True)
+
+    st.write("") 
+    re_liquidation = st.slider(
+        "Desperation Play: Liquidate Your Home (₹ Realized Capital)", 
+        min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
+        key=f"re_slider_{st.session_state.reset_trigger}"
+    )
+    
+    simulated_monthly_rent = 0
+    
+    if re_liquidation > 0:
+        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Selling home under duress. Injecting ₹{re_liquidation:,.0f} cash.</span>", unsafe_allow_html=True)
+        st.warning("⚠️ HOMELESS WARNING: Liquidating your house means you must rent a home. Define your emergency rent allocation below.")
+        
+        suggested_rent = int((st.session_state.real_estate_base * 0.03) / 12)
+        
+        simulated_monthly_rent = st.number_input(
+            "Set Your Emergency Monthly Budget for Alternative Rent (₹)",
+            min_value=5000, max_value=500000, value=suggested_rent, step=5000
+        )
+        st.markdown(f'<div class="indian-words">👉 Rent factored into lifestyle burn: {format_indian_words(simulated_monthly_rent)} per month</div>', unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Home asset remains untouched and intact</span>", unsafe_allow_html=True)
+
+
+# ==========================================
+# THE MATHEMATICAL ENGINE
+# ==========================================
+adj_equity = st.session_state.equity_base * (1 + (equity_shift / 100))
+adj_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
+adj_debt = st.session_state.debt_base  
+adj_home_value = st.session_state.real_estate_base - re_liquidation
+
+standardized_annual_monthly_addon = st.session_state.annual_spikes / 12
+adj_monthly_burn = st.session_state.monthly_burn + expense_shift + standardized_annual_monthly_addon + simulated_monthly_rent
+
+total_debts = st.session_state.home_loan_base + st.session_state.other_loan_base
+total_liquid_assets = adj_equity + adj_debt + adj_metals + re_liquidation
+net_liquid_buffer = total_liquid_assets - total_debts
+
+# 1. Pink Slip Runway Calculation (Months + Years translation)
+if adj_monthly_burn > 0:
+    if net_liquid_buffer > 0:
+        runway_months = net_liquid_buffer / adj_monthly_burn
+        runway_years = runway_months / 12
+    else:
+        runway_months = 0.0
+        runway_years = 0.0
+else:
+    runway_months = 999.9
+    runway_years = 99.9
+
+# 2. Age-Calibrated Retirement Lockdown Target
+target_fire_corpus = ((adj_monthly_burn * 12) * 25) + total_debts
+total_assets_combined = total_liquid_assets + adj_home_value
+
+if target_fire_corpus > 0:
+    old_age_safety_pct = (total_assets_combined / target_fire_corpus) * 100
+else:
+    old_age_safety_pct = 100.0
+
+# Calculate explicit age coverage cap instead of standard percentage
+if adj_monthly_burn > 0:
+    total_funded_years = total_assets_combined / (adj_monthly_burn * 12)
+    max_safe_age = min(st.session_state.current_age + total_funded_years, 100.0)
+else:
+    max_safe_age = 100.0
+
+# 3. Walk-Away Metric
+leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
+
+
+# ==========================================
+# VISUALIZING THE METRICS
+# ==========================================
+st.divider()
+st.subheader("📊 Your Reality")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Pink Slip Runway</div>
+            <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1.1rem; color: #94a3b8;">Mos</span> <span style="font-size: 1.5rem; color: #38bdf8; font-weight:700;">({runway_years:.1f} Yrs)</span></div>
+            <div class="metric-sub">Survival duration covering active loan liabilities</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    # Determine the status label for old age funding based on the asset size
+    if max_safe_age >= 85.0:
+        lockdown_label = "Complete Lifetime Sovereignty"
+    else:
+        lockdown_label = f"Lifestyle Funded Until Age {int(max_safe_age)}"
+        
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Retirement Lockdown</div>
+            <div class="metric-value">{old_age_safety_pct:,.1f}%</div>
+            <div class="metric-sub">{lockdown_label}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">The Walk-Away Metric</div>
+            <div class="metric-value">{leverage_score:,.2f} <span style="font-size: 1rem; color: #94a3b8;">/ 1.00</span></div>
+            <div class="metric-sub">1.00 = 10-year debt-free runway window achieved</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+# ==========================================
+# ADJUSTED PORTFOLIO & LIABILITIES BASELINE
+# ==========================================
+st.write("")
+st.write("")
+st.subheader("🔄 What Your Balance Sheet Looks Like Now")
+
+df_portfolio = pd.DataFrame({
+    "Asset Class / Liability": ["Stocks & Mutual Funds", "Fixed Income & Deposits", "Gold & Silver", "Remaining Home Value", "⚠️ Outstanding Loans (Debt)"],
+    "Your Baseline (₹)": [st.session_state.equity_base, st.session_state.debt_base, st.session_state.metals_base, st.session_state.real_estate_base, total_debts],
+    "Simulated Change (₹)": [adj_equity - st.session_state.equity_base, 0, adj_metals - st.session_state.metals_base, -re_liquidation, 0],
+    "Active Reality Value (₹)": [adj_equity, adj_debt, adj_metals, adj_home_value, total_debts]
+})
+
+st.dataframe(
+    df_portfolio.style.format({
+        "Your Baseline (₹)": "{:,.0f}",
+        "Simulated Change (₹)": "{:+,.0f}",
+        "Active Reality Value (₹)": "{:,.0f}"
+    }), 
+    use_container_width=True,
+    hide_index=True
+)
+
+
+# ==========================================
+# FOOTER FUNNEL
+# ==========================================
+st.divider()
+st.markdown("""
+    <div style="text-align: center; margin-top: 20px;">
+        <h4 style="color: #cbd5e1;">Tired of moving these sliders manually?</h4>
+        <p style="color: #94a3b8; font-size: 0.95rem;">Join the private vault. We track your assets against real-world market closes, factor in your active EMI drains, and deliver your updated survival timelines every Sunday night.</p>
+    </div>
+""", unsafe_allow_html=True)
+
+col_sub1, col_sub2, col_sub3 = st.columns([1, 2, 1])
+with col_sub2:
+    with st.form("subscription_form"):
+        email = st.text_input("Enter your secure email to request an invite:")
+        submit = st.form_submit_button("Request Private Access")
+        if submit and email:
+            st.success("Access requested. Welcome to the vault.")
