@@ -81,67 +81,93 @@ def format_indian_words(number):
     return " ".join(result)
 
 # ==========================================
-# SIDEBAR: ULTRA-CLEAN ONBOARDING DRAWERS
+# SIDEBAR: PERSISTENT STATE INITIALIZATION
 # ==========================================
+# To prevent values from wiping out when changing navigation drawers,
+# we initialize default values inside Streamlit's session state.
+if "monthly_burn" not in st.session_state: st.session_state.monthly_burn = 100000
+if "annual_spikes" not in st.session_state: st.session_state.annual_spikes = 240000
+if "equity_base" not in st.session_state: st.session_state.equity_base = 12000000
+if "debt_base" not in st.session_state: st.session_state.debt_base = 9500000
+if "metals_base" not in st.session_state: st.session_state.metals_base = 3000000
+if "real_estate_base" not in st.session_state: st.session_state.real_estate_base = 15000000
+if "home_loan_base" not in st.session_state: st.session_state.home_loan_base = 4500000
+if "other_loan_base" not in st.session_state: st.session_state.other_loan_base = 800000
+
 st.sidebar.title("🛡️ The Reality Vault")
-st.sidebar.markdown("Fill these three secure drawers to map your financial baseline before running the crisis simulator.")
+st.sidebar.markdown("Select a secure compartment to calibrate your parameters. Other categories will auto-hide to preserve space.")
 
-# --- EXPANDER 1: YOUR COSTS ---
-with st.sidebar.expander("📉 1. Your Costs", expanded=True):
-    st.markdown("<small style='color: #94a3b8;'>What it costs to maintain your exact family lifestyle right now.</small>", unsafe_allow_html=True)
-    monthly_burn = st.number_input(
+# Space-saving segmented navigator replacing bloating expanders
+active_drawer = st.sidebar.radio(
+    "Go To Drawer:",
+    ["📉 1. Your Costs", "💰 2. Your Money", "⚠️ 3. Your Loans"],
+    label_visibility="collapsed"
+)
+
+st.sidebar.divider()
+
+# --- DRAWER 1: YOUR COSTS ---
+if active_drawer == "📉 1. Your Costs":
+    st.sidebar.subheader("📉 Your Costs")
+    st.sidebar.markdown("<small style='color: #94a3b8;'>What it costs to maintain your exact lifestyle right now.</small>", unsafe_allow_html=True)
+    
+    st.session_state.monthly_burn = st.sidebar.number_input(
         "Standard Monthly Expenses (₹)", 
-        min_value=10000, max_value=1000000, value=100000, step=10000
+        min_value=10000, max_value=1000000, value=st.session_state.monthly_burn, step=10000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(monthly_burn)} per month</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.monthly_burn)} per month</div>', unsafe_allow_html=True)
 
-    annual_spikes = st.number_input(
-        "Annual Large Expenses (Insurance, School Fees, Holidays) (₹)", 
-        min_value=0, max_value=5000000, value=240000, step=20000
+    st.session_state.annual_spikes = st.sidebar.number_input(
+        "Annual Big Spikes (Insurance, Fees, etc.) (₹)", 
+        min_value=0, max_value=5000000, value=st.session_state.annual_spikes, step=20000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(annual_spikes)} per year</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.annual_spikes)} per year</div>', unsafe_allow_html=True)
 
-# --- EXPANDER 2: YOUR MONEY ---
-with st.sidebar.expander("💰 2. Your Money", expanded=False):
-    st.markdown("<small style='color: #94a3b8;'>Every scrap of wealth you have built up so far.</small>", unsafe_allow_html=True)
-    equity_base = st.number_input(
+# --- DRAWER 2: YOUR MONEY ---
+elif active_drawer == "💰 2. Your Money":
+    st.sidebar.subheader("💰 Your Money")
+    st.sidebar.markdown("<small style='color: #94a3b8;'>Every scrap of net assets built up so far.</small>", unsafe_allow_html=True)
+    
+    st.session_state.equity_base = st.sidebar.number_input(
         "Stocks & Mutual Funds (₹)", 
-        min_value=0, value=12000000, step=500000
+        min_value=0, value=st.session_state.equity_base, step=500000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(equity_base)}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.equity_base)}</div>', unsafe_allow_html=True)
 
-    debt_base = st.number_input(
+    st.session_state.debt_base = st.sidebar.number_input(
         "Fixed Deposits / EPF / PPF (₹)", 
-        min_value=0, value=9500000, step=500000
+        min_value=0, value=st.session_state.debt_base, step=500000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(debt_base)}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.debt_base)}</div>', unsafe_allow_html=True)
 
-    metals_base = st.number_input(
-        "Gold & Silver (🛡️ Tangible Safety) (₹)", 
-        min_value=0, value=3000000, step=100000
+    st.session_state.metals_base = st.sidebar.number_input(
+        "Gold & Silver (₹)", 
+        min_value=0, value=st.session_state.metals_base, step=100000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(metals_base)}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.metals_base)}</div>', unsafe_allow_html=True)
 
-    real_estate_base = st.number_input(
+    st.session_state.real_estate_base = st.sidebar.number_input(
         "Current Home Market Value (₹)", 
-        min_value=0, value=15000000, step=1000000
+        min_value=0, value=st.session_state.real_estate_base, step=1000000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(real_estate_base)}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.real_estate_base)}</div>', unsafe_allow_html=True)
 
-# --- EXPANDER 3: YOUR LOANS ---
-with st.sidebar.expander("⚠️ 3. Your Loans", expanded=False):
-    st.markdown("<small style='color: #94a3b8;'>Outstanding liabilities that will heavily restrict your freedom if income stops.</small>", unsafe_allow_html=True)
-    home_loan_base = st.number_input(
+# --- DRAWER 3: YOUR LOANS ---
+elif active_drawer == "⚠️ 3. Your Loans":
+    st.sidebar.subheader("⚠️ Your Loans")
+    st.sidebar.markdown("<small style='color: #94a3b8;'>Active debts dragging your timeline down.</small>", unsafe_allow_html=True)
+    
+    st.session_state.home_loan_base = st.sidebar.number_input(
         "Home Loan Balance Outstanding (₹)", 
-        min_value=0, value=4500000, step=500000
+        min_value=0, value=st.session_state.home_loan_base, step=500000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(home_loan_base)}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.home_loan_base)}</div>', unsafe_allow_html=True)
 
-    other_loan_base = st.number_input(
-        "Other Loans (Car, Personal, Credit Card Debt) (₹)", 
-        min_value=0, value=800000, step=100000
+    st.session_state.other_loan_base = st.sidebar.number_input(
+        "Other Loans (Car, Personal, Credit) (₹)", 
+        min_value=0, value=st.session_state.other_loan_base, step=100000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(other_loan_base)}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(st.session_state.other_loan_base)}</div>', unsafe_allow_html=True)
 
 
 # ==========================================
@@ -158,32 +184,25 @@ with col_head:
     st.subheader("🚨 The Crisis Test")
     st.markdown("Drag these sliders into negative zones to simulate market and lifestyle shocks.")
 
-# Handle reset capability via Streamlit state keys
 if "reset_trigger" not in st.session_state:
     st.session_state.reset_trigger = False
 
 with col_btn:
-    st.write("") # Layout alignment spacing
+    st.write("") 
     if st.button("🔄 Reset Crisis Test", use_container_width=True):
         st.session_state.reset_trigger = not st.session_state.reset_trigger
-
-# Assign slider default values depending on reset state trigger
-default_val = 0 if st.session_state.reset_trigger else 0
 
 # --- THE GRIPPING CRISIS SLIDERS ---
 col_market, col_career = st.columns(2)
 
 with col_market:
     st.markdown("### Market Meltdowns")
-    
-    # We use explicit unique keys linked to our reset trigger logic
     equity_shift = st.slider(
         "Stock Market Collapse / Rally (%)", 
         min_value=-50, max_value=30, value=0, step=5,
         key=f"equity_slider_{st.session_state.reset_trigger}"
     )
     
-    # Dynamic text feedback for the Equity Crisis Slider
     if equity_shift == 0:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Market Action</span>", unsafe_allow_html=True)
     elif equity_shift == -10:
@@ -195,7 +214,7 @@ with col_market:
     else:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Sudden Post-Election Bull Run</span>", unsafe_allow_html=True)
 
-    st.write("") # Spacer
+    st.write("") 
     metals_shift = st.slider(
         "Gold & Silver Collapse / Rally (%)", 
         min_value=-20, max_value=40, value=0, step=5,
@@ -216,28 +235,25 @@ with col_career:
         key=f"expense_slider_{st.session_state.reset_trigger}"
     )
     if expense_shift > 0:
-        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 Simulating a recurring ₹{expense_shift:,.0f} drain (Medical emergencies / Dependent parent care / School fee hikes)</span>", unsafe_allow_html=True)
+        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 Simulating a recurring ₹{expense_shift:,.0f} drain (Medical / Dependents / Tuition)</span>", unsafe_allow_html=True)
     else:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Lifestyle operating at optimized baseline burn</span>", unsafe_allow_html=True)
 
-    st.write("") # Spacer
+    st.write("") 
     re_liquidation = st.slider(
         "Desperation Play: Liquidate Your Home (₹ Realized Capital)", 
-        min_value=0, max_value=int(real_estate_base), value=0, step=1000000,
+        min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
         key=f"re_slider_{st.session_state.reset_trigger}"
     )
     
-    # Initialize rent penalty variables
     simulated_monthly_rent = 0
     
     if re_liquidation > 0:
-        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Selling home under duress. Injecting ₹{re_liquidation:,.0f} cash into the pool.</span>", unsafe_allow_html=True)
+        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Selling home under duress. Injecting ₹{re_liquidation:,.0f} cash.</span>", unsafe_allow_html=True)
         st.warning("⚠️ HOMELESS WARNING: Liquidating your house means you must rent a home. Define your emergency rent allocation below.")
         
-        # Calculate a realistic 3% baseline estimation to pre-populate the box
-        suggested_rent = int((real_estate_base * 0.03) / 12)
+        suggested_rent = int((st.session_state.real_estate_base * 0.03) / 12)
         
-        # Fully editable rental budget window
         simulated_monthly_rent = st.number_input(
             "Set Your Emergency Monthly Budget for Alternative Rent (₹)",
             min_value=5000, max_value=500000, value=suggested_rent, step=5000
@@ -250,17 +266,15 @@ with col_career:
 # ==========================================
 # THE MATHEMATICAL ENGINE
 # ==========================================
-adj_equity = equity_base * (1 + (equity_shift / 100))
-adj_metals = metals_base * (1 + (metals_shift / 100))
-adj_debt = debt_base  
-adj_home_value = real_estate_base - re_liquidation
+adj_equity = st.session_state.equity_base * (1 + (equity_shift / 100))
+adj_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
+adj_debt = st.session_state.debt_base  
+adj_home_value = st.session_state.real_estate_base - re_liquidation
 
-# Process standardized monthly burn (combining base cost + annual bulk factor + emergency spike + user-defined alternative rent)
-standardized_annual_monthly_addon = annual_spikes / 12
-adj_monthly_burn = monthly_burn + expense_shift + standardized_annual_monthly_addon + simulated_monthly_rent
+standardized_annual_monthly_addon = st.session_state.annual_spikes / 12
+adj_monthly_burn = st.session_state.monthly_burn + expense_shift + standardized_annual_monthly_addon + simulated_monthly_rent
 
-# Process assets vs liabilities
-total_debts = home_loan_base + other_loan_base
+total_debts = st.session_state.home_loan_base + st.session_state.other_loan_base
 total_liquid_assets = adj_equity + adj_debt + adj_metals + re_liquidation
 net_liquid_buffer = total_liquid_assets - total_debts
 
@@ -298,7 +312,7 @@ with col1:
         <div class="metric-card">
             <div class="metric-title">Pink Slip Runway</div>
             <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1rem; color: #94a3b8;">Months</span></div>
-            <div class="metric-sub">Survival timeline (Includes prorated annual expenses + custom rent allocation)</div>
+            <div class="metric-sub">Survival timeline (Factors prorated annual spikes + active rent)</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -307,7 +321,7 @@ with col2:
         <div class="metric-card">
             <div class="metric-title">Retirement Lockdown</div>
             <div class="metric-value">{old_age_safety_pct:,.1f}%</div>
-            <div class="metric-sub">How close old age + debts are to being fully funded</div>
+            <div class="metric-sub">How close old age + active loans are to being fully funded</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -330,8 +344,8 @@ st.subheader("🔄 What Your Balance Sheet Looks Like Now")
 
 df_portfolio = pd.DataFrame({
     "Asset Class / Liability": ["Stocks & Mutual Funds", "Fixed Income & Deposits", "Gold & Silver", "Remaining Home Value", "⚠️ Outstanding Loans (Debt)"],
-    "Your Baseline (₹)": [equity_base, debt_base, metals_base, real_estate_base, total_debts],
-    "Simulated Change (₹)": [adj_equity - equity_base, 0, adj_metals - metals_base, -re_liquidation, 0],
+    "Your Baseline (₹)": [st.session_state.equity_base, st.session_state.debt_base, st.session_state.metals_base, st.session_state.real_estate_base, total_debts],
+    "Simulated Change (₹)": [adj_equity - st.session_state.equity_base, 0, adj_metals - st.session_state.metals_base, -re_liquidation, 0],
     "Active Reality Value (₹)": [adj_equity, adj_debt, adj_metals, adj_home_value, total_debts]
 })
 
