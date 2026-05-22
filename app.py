@@ -108,14 +108,8 @@ st.sidebar.divider()
 # --- DRAWER 1: YOUR COSTS ---
 if active_drawer == "📉 1. Your Costs":
     st.sidebar.subheader("📉 Your Costs")
-    st.sidebar.markdown("<small style='color: #94a3b8;'>Your profile demographics and essential lifestyle outlays.</small>", unsafe_allow_html=True)
+    st.sidebar.markdown("<small style='color: #94a3b8;'>Your essential lifestyle outlays and baseline household operational costs.</small>", unsafe_allow_html=True)
     
-    st.session_state.current_age = st.sidebar.number_input(
-        "Your Current Age (Years)",
-        min_value=21, max_value=75, value=st.session_state.current_age, step=1
-    )
-    st.sidebar.markdown(f'<div class="indian-words">👉 Age baseline locked at {st.session_state.current_age} years old</div>', unsafe_allow_html=True)
-
     st.session_state.monthly_burn = st.sidebar.number_input(
         "Standard Monthly Expenses (₹)", 
         min_value=10000, max_value=1000000, value=st.session_state.monthly_burn, step=10000
@@ -176,10 +170,19 @@ elif active_drawer == "⚠️ 3. Your Loans":
 
 
 # ==========================================
-# MAIN DASHBOARD: THE CRISIS TEST
+# MAIN DASHBOARD HEADER & VISIBLE AGE ANCHOR
 # ==========================================
-st.title("The Pink Slip Index")
-st.markdown("Your interactive survival sandbox. Adjust the parameters below to gauge your uncompromised safety margin if your salary engine abruptly stops tomorrow.")
+col_title, col_age_input = st.columns([4, 2])
+
+with col_title:
+    st.title("The Pink Slip Index")
+    st.markdown("Your interactive survival sandbox. Adjust parameters to gauge your safety margin if your corporate salary engine abruptly stops.")
+
+with col_age_input:
+    st.session_state.current_age = st.number_input(
+        "⚡ Enter Your Current Age (Years)",
+        min_value=21, max_value=75, value=st.session_state.current_age, step=1
+    )
 
 st.divider()
 
@@ -288,12 +291,15 @@ if adj_monthly_burn > 0:
     if net_liquid_buffer > 0:
         runway_months = net_liquid_buffer / adj_monthly_burn
         runway_years = runway_months / 12
+        age_until_covered = st.session_state.current_age + runway_years
     else:
         runway_months = 0.0
         runway_years = 0.0
+        age_until_covered = st.session_state.current_age
 else:
     runway_months = 999.9
     runway_years = 99.9
+    age_until_covered = 100.0
 
 # 2. Age-Calibrated Retirement Lockdown Target
 target_fire_corpus = ((adj_monthly_burn * 12) * 25) + total_debts
@@ -328,12 +334,11 @@ with col1:
         <div class="metric-card">
             <div class="metric-title">Pink Slip Runway</div>
             <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1.1rem; color: #94a3b8;">Mos</span> <span style="font-size: 1.5rem; color: #38bdf8; font-weight:700;">({runway_years:.1f} Yrs)</span></div>
-            <div class="metric-sub">Survival duration covering active loan liabilities</div>
+            <div class="metric-sub">👇 Zero-Income Shield covers you until Age {age_until_covered:.1f}</div>
         </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    # Determine the status label for old age funding based on the asset size
     if max_safe_age >= 85.0:
         lockdown_label = "Complete Lifetime Sovereignty"
     else:
