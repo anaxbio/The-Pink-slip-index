@@ -5,13 +5,13 @@ import pandas as pd
 # PAGE CONFIGURATION
 # ==========================================
 st.set_page_config(
-    page_title="The Career Shield | Prototype",
+    page_title="The Pink Slip Index",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for the "Snazzy" Dark/Premium look
+# Custom CSS for the Premium Dark Dashboard
 st.markdown("""
     <style>
     .metric-card {
@@ -44,163 +44,176 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SIDEBAR: BASELINE ONBOARDING
+# SIDEBAR: THE INPUT VAULT
 # ==========================================
-st.sidebar.title("🛡️ The Setup Vault")
+st.sidebar.title("🛡️ The Reality Vault")
 st.sidebar.markdown("Enter your baseline operational numbers.")
 
-st.sidebar.header("1. Operational Burn")
+st.sidebar.header("1. Your Current Monthly Cost")
 monthly_burn = st.sidebar.number_input(
-    "Current Monthly Expenses (₹)", 
+    "Family Expenses Per Month (₹)", 
     min_value=10000, max_value=1000000, value=100000, step=10000
 )
 
-st.sidebar.header("2. Asset Baseline")
+st.sidebar.header("2. Money You Already Made")
 equity_base = st.sidebar.number_input(
-    "Domestic Equities (₹)", 
+    "Stocks & Mutual Funds (₹)", 
     min_value=0, value=12000000, step=500000
 )
 debt_base = st.sidebar.number_input(
-    "Fixed Income & Debt (₹)", 
+    "Fixed Deposits / EPF / PPF (₹)", 
     min_value=0, value=9500000, step=500000
 )
 metals_base = st.sidebar.number_input(
-    "Precious Metals Hedge (₹)", 
+    "Gold & Silver (₹)", 
     min_value=0, value=3000000, step=100000
 )
 real_estate_base = st.sidebar.number_input(
-    "Illiquid Real Estate (₹)", 
+    "Your Home Value (₹)", 
     min_value=0, value=15000000, step=1000000
+)
+
+st.sidebar.header("3. Debts & Loans")
+home_loan_base = st.sidebar.number_input(
+    "Home Loan Outstanding (₹)", 
+    min_value=0, value=4500000, step=500000
+)
+other_loan_base = st.sidebar.number_input(
+    "Other Loans (Car / Personal) (₹)", 
+    min_value=0, value=800000, step=100000
 )
 
 # ==========================================
 # MAIN DASHBOARD: THE SANDBOX
 # ==========================================
-st.title("The Career Shield Dashboard")
-st.markdown("Your interactive financial heart-rate monitor. Adjust the manual stress-test sliders below to see how market volatility and career decisions impact your true structural runway.")
+st.title("The Pink Slip Index")
+st.markdown("Your interactive survival sandbox. Adjust the sliders below to see exactly what happens to your family's lifestyle if the primary salary stops tomorrow.")
 
 st.divider()
 
-# --- THE STRESS TEST SLIDERS (MANUAL OVERRIDES) ---
-st.subheader("🎛️ The 'What-If' Sandbox")
-st.markdown("Use these sliders to simulate real-world shifts without connecting to a live data feed.")
+# --- THE STRESS TEST SLIDERS ---
+st.subheader("🎛️ The 'What-If' Crash Simulator")
 
 col_market, col_career = st.columns(2)
 
 with col_market:
-    st.markdown("**Market Stress Simulator**")
-    equity_shift = st.slider("Equities Market Shift (%)", min_value=-50, max_value=50, value=0, step=1)
-    metals_shift = st.slider("Precious Metals Shift (%)", min_value=-30, max_value=50, value=0, step=1)
+    st.markdown("**Simulate Market Crashes**")
+    equity_shift = st.slider("Stock Market Crash/Rally (%)", min_value=-50, max_value=50, value=0, step=1)
+    metals_shift = st.slider("Gold Price Shift (%)", min_value=-30, max_value=50, value=0, step=1)
 
 with col_career:
-    st.markdown("**Career & Life Stress Simulator**")
-    expense_shift = st.slider("Monthly Expense Shift (₹)", min_value=-50000, max_value=100000, value=0, step=5000)
-    re_liquidation = st.slider("Simulate Real Estate Sale (₹ to Liquid)", min_value=0, max_value=int(real_estate_base), value=0, step=500000)
+    st.markdown("**Simulate Sudden Life Emergencies**")
+    expense_shift = st.slider("Sudden Monthly Expense Spike (₹)", min_value=-50000, max_value=100000, value=0, step=5000)
+    re_liquidation = st.slider("Sell Home to Get Quick Cash (₹)", min_value=0, max_value=int(real_estate_base), value=0, step=500000)
 
 # ==========================================
 # THE MATHEMATICAL ENGINE
 # ==========================================
-# Calculate adjusted values based on manual slider inputs
 adj_equity = equity_base * (1 + (equity_shift / 100))
 adj_metals = metals_base * (1 + (metals_shift / 100))
-adj_debt = debt_base  # Assuming fixed income doesn't swing wildly short-term
+adj_debt = debt_base  
+adj_home_value = real_estate_base - re_liquidation
 
-# Total liquid capital available for runway (plus any simulated RE sales)
-total_liquid_corpus = adj_equity + adj_debt + adj_metals + re_liquidation
+# Calculation of True Liquid Capital minus immediate debts
+total_debts = home_loan_base + other_loan_base
+total_liquid_assets = adj_equity + adj_debt + adj_metals + re_liquidation
+net_liquid_buffer = total_liquid_assets - total_debts
 adj_monthly_burn = monthly_burn + expense_shift
 
-# Core Metrics Calculations
+# 1. Pink Slip Runway (Runway in Months based on Net Liquid Buffer)
 if adj_monthly_burn > 0:
-    immediate_runway_months = total_liquid_corpus / adj_monthly_burn
+    if net_liquid_buffer > 0:
+        runway_months = net_liquid_buffer / adj_monthly_burn
+    else:
+        runway_months = 0.0  # Immediate financial danger zone
 else:
-    immediate_runway_months = 999.9
+    runway_months = 999.9
 
-# Coast-FIRE Target (using a standard 4% withdrawal rule / 25x multiple of annual burn)
-target_fire_corpus = (adj_monthly_burn * 12) * 25
+# 2. Retirement Lockdown Target (using standard 25x annual burn multiple + outstanding loans)
+target_fire_corpus = ((adj_monthly_burn * 12) * 25) + total_debts
+total_assets_combined = total_liquid_assets + adj_home_value
 if target_fire_corpus > 0:
-    coast_fire_pct = (total_liquid_corpus / target_fire_corpus) * 100
+    old_age_safety_pct = (total_assets_combined / target_fire_corpus) * 100
 else:
-    coast_fire_pct = 100.0
+    old_age_safety_pct = 100.0
 
-# Freedom Index (Scale of 0.00 to 1.00 based on achieving 300 months of runway)
-freedom_index = min(immediate_runway_months / 300, 1.0)
+# 3. Walk-Away Metric (Scale of 0.00 to 1.00 based on a 10-year / 120-month clear window)
+leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
 
 # ==========================================
 # VISUALIZING THE METRICS
 # ==========================================
 st.divider()
-st.subheader("📊 Your Calibrated Reality")
+st.subheader("📊 Your Reality")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">Immediate Shield (Runway)</div>
-            <div class="metric-value">{immediate_runway_months:,.1f} <span style="font-size: 1rem; color: #94a3b8;">Months</span></div>
-            <div class="metric-sub">Absolute survival at current burn</div>
+            <div class="metric-title">Pink Slip Runway</div>
+            <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1rem; color: #94a3b8;">Months</span></div>
+            <div class="metric-sub">Net survival duration after clearing outstanding loans</div>
         </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">Coast-FIRE Status</div>
-            <div class="metric-value">{coast_fire_pct:,.1f}%</div>
-            <div class="metric-sub">Progress toward total structural independence</div>
+            <div class="metric-title">Retirement Lockdown</div>
+            <div class="metric-value">{old_age_safety_pct:,.1f}%</div>
+            <div class="metric-sub">How close old age + debts are to being fully funded</div>
         </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">The Freedom Index</div>
-            <div class="metric-value">{freedom_index:,.2f} <span style="font-size: 1rem; color: #94a3b8;">/ 1.00</span></div>
-            <div class="metric-sub">1.00 = Absolute Sovereignty</div>
+            <div class="metric-title">The Walk-Away Metric</div>
+            <div class="metric-value">{leverage_score:,.2f} <span style="font-size: 1rem; color: #94a3b8;">/ 1.00</span></div>
+            <div class="metric-sub">1.00 = Debt-free power to quit whenever you want</div>
         </div>
     """, unsafe_allow_html=True)
 
 # ==========================================
-# DYNAMIC PORTFOLIO TABLE
+# ADJUSTED PORTFOLIO & LIABILITIES BASELINE
 # ==========================================
 st.write("")
 st.write("")
-st.subheader("🔄 Adjusted Portfolio Baseline")
+st.subheader("🔄 What Your Balance Sheet Looks Like Now")
 
-# Create a clean dataframe for the adjusted portfolio
 df_portfolio = pd.DataFrame({
-    "Asset Class": ["Domestic Equities", "Fixed Income & Debt", "Precious Metals", "Illiquid Real Estate"],
-    "Baseline Value (₹)": [equity_base, debt_base, metals_base, real_estate_base],
-    "Simulated Adjustment (₹)": [adj_equity - equity_base, 0, adj_metals - metals_base, -re_liquidation],
-    "New Active Value (₹)": [adj_equity, adj_debt, adj_metals, real_estate_base - re_liquidation]
+    "Asset Class / Liability": ["Stocks & Mutual Funds", "Fixed Income & Deposits", "Gold & Silver", "Remaining Home Value", "⚠️ Outstanding Loans (Debt)"],
+    "Your Baseline (₹)": [equity_base, debt_base, metals_base, real_estate_base, total_debts],
+    "Simulated Change (₹)": [adj_equity - equity_base, 0, adj_metals - metals_base, -re_liquidation, 0],
+    "Active Reality Value (₹)": [adj_equity, adj_debt, adj_metals, adj_home_value, total_debts]
 })
 
 st.dataframe(
     df_portfolio.style.format({
-        "Baseline Value (₹)": "{:,.0f}",
-        "Simulated Adjustment (₹)": "{:+,.0f}",
-        "New Active Value (₹)": "{:,.0f}"
+        "Your Baseline (₹)": "{:,.0f}",
+        "Simulated Change (₹)": "{:+,.0f}",
+        "Active Reality Value (₹)": "{:,.0f}"
     }), 
     use_container_width=True,
     hide_index=True
 )
 
 # ==========================================
-# LEAD CAPTURE / FUNNEL FOOTER
+# FOOTER FUNNEL
 # ==========================================
 st.divider()
 st.markdown("""
     <div style="text-align: center; margin-top: 20px;">
-        <h4 style="color: #cbd5e1;">Tired of moving the sliders manually?</h4>
-        <p style="color: #94a3b8; font-size: 0.95rem;">Join the private vault. We map your baselines to real-world market closing data and deliver your exact runway index to your inbox every Sunday evening.</p>
+        <h4 style="color: #cbd5e1;">Tired of moving these sliders manually?</h4>
+        <p style="color: #94a3b8; font-size: 0.95rem;">Join the private vault. We track your assets against real-world market closes, factor in your active EMI drains, and deliver your updated survival timelines every Sunday night.</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Simple text input for email capture (can be connected to a webhook, formsubmit, or DB later)
 col_sub1, col_sub2, col_sub3 = st.columns([1, 2, 1])
 with col_sub2:
     with st.form("subscription_form"):
-        email = st.text_input("Enter your secure email to get the Sunday Report:")
-        submit = st.form_submit_button("Lock in my Dashboard")
+        email = st.text_input("Enter your secure email to request an invite:")
+        submit = st.form_submit_button("Request Private Access")
         if submit and email:
             st.success("Access requested. Welcome to the vault.")
