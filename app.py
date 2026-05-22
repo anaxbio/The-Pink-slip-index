@@ -40,8 +40,41 @@ st.markdown("""
         font-size: 0.85rem;
         font-weight: 500;
     }
+    .indian-words {
+        color: #38bdf8;
+        font-size: 0.85rem;
+        margin-top: -12px;
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
     </style>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# HELPER FUNCTION: INDIAN CURRENCY TO WORDS
+# ==========================================
+def format_indian_words(number):
+    if number == 0:
+        return "Zero Rupees"
+    
+    crores = number // 10000000
+    remainder = number % 10000000
+    lakhs = remainder // 100000
+    remainder = remainder % 100000
+    thousands = remainder // 1000
+    rupees = remainder % 1000
+    
+    result = []
+    if crores > 0:
+        result.append(f"{crores} Crore" + ("s" if crores > 1 else ""))
+    if lakhs > 0:
+        result.append(f"{lakhs} Lakh" + ("s" if lakhs > 1 else ""))
+    if thousands > 0:
+        result.append(f"{thousands} Thousand")
+    if rupees > 0 or len(result) == 0:
+        result.append(f"{rupees} Rupee" + ("s" if rupees > 1 or rupees == 0 else ""))
+        
+    return " ".join(result)
 
 # ==========================================
 # SIDEBAR: THE INPUT VAULT
@@ -49,39 +82,64 @@ st.markdown("""
 st.sidebar.title("🛡️ The Reality Vault")
 st.sidebar.markdown("Enter your baseline operational numbers.")
 
-st.sidebar.header("1. Your Current Monthly Cost")
+# --- SECTION 1: EXPENSES ---
+st.sidebar.header("1. What it Costs to Live")
+
 monthly_burn = st.sidebar.number_input(
-    "Family Expenses Per Month (₹)", 
+    "Monthly Household Expenses (₹)", 
     min_value=10000, max_value=1000000, value=100000, step=10000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(monthly_burn)} per month</div>', unsafe_allow_html=True)
 
-st.sidebar.header("2. Money You Already Made")
+annual_spikes = st.sidebar.number_input(
+    "Annual Bulk Expenses (Insurance, School Fees, etc.) (₹)", 
+    min_value=0, max_value=5000000, value=240000, step=20000
+)
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(annual_spikes)} per year</div>', unsafe_allow_html=True)
+
+
+# --- SECTION 2: ASSETS ---
+st.sidebar.header("2. Your Current Assets")
+
 equity_base = st.sidebar.number_input(
     "Stocks & Mutual Funds (₹)", 
     min_value=0, value=12000000, step=500000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(equity_base)}</div>', unsafe_allow_html=True)
+
 debt_base = st.sidebar.number_input(
     "Fixed Deposits / EPF / PPF (₹)", 
     min_value=0, value=9500000, step=500000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(debt_base)}</div>', unsafe_allow_html=True)
+
 metals_base = st.sidebar.number_input(
     "Gold & Silver (₹)", 
     min_value=0, value=3000000, step=100000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(metals_base)}</div>', unsafe_allow_html=True)
+
 real_estate_base = st.sidebar.number_input(
     "Your Home Value (₹)", 
     min_value=0, value=15000000, step=1000000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(real_estate_base)}</div>', unsafe_allow_html=True)
 
+
+# --- SECTION 3: LIABILITIES ---
 st.sidebar.header("3. Debts & Loans")
+
 home_loan_base = st.sidebar.number_input(
     "Home Loan Outstanding (₹)", 
     min_value=0, value=4500000, step=500000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(home_loan_base)}</div>', unsafe_allow_html=True)
+
 other_loan_base = st.sidebar.number_input(
     "Other Loans (Car / Personal) (₹)", 
     min_value=0, value=800000, step=100000
 )
+st.sidebar.markdown(f'<div class="indian-words">👉 {format_indian_words(other_loan_base)}</div>', unsafe_allow_html=True)
 
 # ==========================================
 # MAIN DASHBOARD: THE SANDBOX
@@ -114,22 +172,25 @@ adj_metals = metals_base * (1 + (metals_shift / 100))
 adj_debt = debt_base  
 adj_home_value = real_estate_base - re_liquidation
 
-# Calculation of True Liquid Capital minus immediate debts
+# Process standardized monthly burn (combining base cost + annualized bulk cost broken down monthly)
+standardized_annual_monthly_addon = annual_spikes / 12
+adj_monthly_burn = monthly_burn + expense_shift + standardized_annual_monthly_addon
+
+# Process assets vs liabilities
 total_debts = home_loan_base + other_loan_base
 total_liquid_assets = adj_equity + adj_debt + adj_metals + re_liquidation
 net_liquid_buffer = total_liquid_assets - total_debts
-adj_monthly_burn = monthly_burn + expense_shift
 
-# 1. Pink Slip Runway (Runway in Months based on Net Liquid Buffer)
+# 1. Pink Slip Runway Calculation
 if adj_monthly_burn > 0:
     if net_liquid_buffer > 0:
         runway_months = net_liquid_buffer / adj_monthly_burn
     else:
-        runway_months = 0.0  # Immediate financial danger zone
+        runway_months = 0.0
 else:
     runway_months = 999.9
 
-# 2. Retirement Lockdown Target (using standard 25x annual burn multiple + outstanding loans)
+# 2. Retirement Lockdown Target
 target_fire_corpus = ((adj_monthly_burn * 12) * 25) + total_debts
 total_assets_combined = total_liquid_assets + adj_home_value
 if target_fire_corpus > 0:
@@ -137,7 +198,7 @@ if target_fire_corpus > 0:
 else:
     old_age_safety_pct = 100.0
 
-# 3. Walk-Away Metric (Scale of 0.00 to 1.00 based on a 10-year / 120-month clear window)
+# 3. Walk-Away Metric
 leverage_score = min(runway_months / 120, 1.0) if runway_months > 0 else 0.0
 
 # ==========================================
@@ -153,7 +214,7 @@ with col1:
         <div class="metric-card">
             <div class="metric-title">Pink Slip Runway</div>
             <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1rem; color: #94a3b8;">Months</span></div>
-            <div class="metric-sub">Net survival duration after clearing outstanding loans</div>
+            <div class="metric-sub">Survival timeline (Includes prorated annual expenses)</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -171,7 +232,7 @@ with col3:
         <div class="metric-card">
             <div class="metric-title">The Walk-Away Metric</div>
             <div class="metric-value">{leverage_score:,.2f} <span style="font-size: 1rem; color: #94a3b8;">/ 1.00</span></div>
-            <div class="metric-sub">1.00 = Debt-free power to quit whenever you want</div>
+            <div class="metric-sub">1.00 = 10-year debt-free runway window achieved</div>
         </div>
     """, unsafe_allow_html=True)
 
