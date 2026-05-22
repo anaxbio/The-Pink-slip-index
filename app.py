@@ -172,7 +172,7 @@ with col_market:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Sudden Post-Election Bull Run</span>", unsafe_allow_html=True)
 
     st.write("") # Spacer
-    metals_shift = st.slider("Gold & Silver Volatility (%)", min_value=-20, max_value=40, value=0, step=5)
+    metals_shift = st.slider("Gold & Silver Collapse / Rally (%)", min_value=-20, max_value=40, value=0, step=5)
     if metals_shift > 0:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🪙 Gold acting as a defensive flight-to-safety shield</span>", unsafe_allow_html=True)
     elif metals_shift < 0:
@@ -190,8 +190,13 @@ with col_career:
 
     st.write("") # Spacer
     re_liquidation = st.slider("Desperation Play: Liquidate Your Home (₹ Realized Capital)", min_value=0, max_value=int(real_estate_base), value=0, step=1000000)
+    
+    # Calculate a realistic 3% annual rental yield penalty if they sell their house
+    simulated_monthly_rent_penalty = int((real_estate_base * 0.03) / 12) if re_liquidation > 0 else 0
+    
     if re_liquidation > 0:
-        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Selling home under duress. Injecting ₹{re_liquidation:,.0f} cash into the safety pool but stripping your physical estate asset.</span>", unsafe_allow_html=True)
+        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Selling home under duress. Injecting ₹{re_liquidation:,.0f} cash into the pool.</span>", unsafe_allow_html=True)
+        st.warning(f"⚠️ HOMELESS PENALTY ACTIVATED: Selling your roof forces you into the rental market. Your monthly burn has automatically been hit with an additional ₹{simulated_monthly_rent_penalty:,.0f}/month rent penalty to maintain a comparable home standard.")
     else:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Home asset remains untouched and intact</span>", unsafe_allow_html=True)
 
@@ -204,9 +209,9 @@ adj_metals = metals_base * (1 + (metals_shift / 100))
 adj_debt = debt_base  
 adj_home_value = real_estate_base - re_liquidation
 
-# Process standardized monthly burn (combining base cost + annualized bulk cost broken down monthly)
+# Process standardized monthly burn (combining base cost + annualized bulk cost + expense spike + new rent penalty)
 standardized_annual_monthly_addon = annual_spikes / 12
-adj_monthly_burn = monthly_burn + expense_shift + standardized_annual_monthly_addon
+adj_monthly_burn = monthly_burn + expense_shift + standardized_annual_monthly_addon + simulated_monthly_rent_penalty
 
 # Process assets vs liabilities
 total_debts = home_loan_base + other_loan_base
@@ -247,7 +252,7 @@ with col1:
         <div class="metric-card">
             <div class="metric-title">Pink Slip Runway</div>
             <div class="metric-value">{runway_months:,.1f} <span style="font-size: 1rem; color: #94a3b8;">Months</span></div>
-            <div class="metric-sub">Survival timeline (Includes prorated annual expenses)</div>
+            <div class="metric-sub">Survival timeline (Includes prorated annual expenses + forced rent)</div>
         </div>
     """, unsafe_allow_html=True)
 
