@@ -81,27 +81,29 @@ def format_indian_words(number):
     return " ".join(result)
 
 # ==========================================
-# SIDEBAR: CLEAN EXPANDER COMPRESSION
+# SIDEBAR: ULTRA-CLEAN ONBOARDING DRAWERS
 # ==========================================
 st.sidebar.title("🛡️ The Reality Vault")
-st.sidebar.markdown("Establish your baseline before running stress tests.")
+st.sidebar.markdown("Fill these three secure drawers to map your financial baseline before running the crisis simulator.")
 
-# --- EXPANDER 1: OUTFLOWS ---
-with st.sidebar.expander("📁 1. What it Costs to Live", expanded=True):
+# --- EXPANDER 1: YOUR COSTS ---
+with st.sidebar.expander("📉 1. Your Costs", expanded=True):
+    st.markdown("<small style='color: #94a3b8;'>What it costs to maintain your exact family lifestyle right now.</small>", unsafe_allow_html=True)
     monthly_burn = st.number_input(
-        "Monthly Household Expenses (₹)", 
+        "Standard Monthly Expenses (₹)", 
         min_value=10000, max_value=1000000, value=100000, step=10000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(monthly_burn)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(monthly_burn)} per month</div>', unsafe_allow_html=True)
 
     annual_spikes = st.number_input(
-        "Annual Large Expenses (Insurance, School Fees) (₹)", 
+        "Annual Large Expenses (Insurance, School Fees, Holidays) (₹)", 
         min_value=0, max_value=5000000, value=240000, step=20000
     )
-    st.markdown(f'<div class="indian-words">👉 {format_indian_words(annual_spikes)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="indian-words">👉 {format_indian_words(annual_spikes)} per year</div>', unsafe_allow_html=True)
 
-# --- EXPANDER 2: ASSETS ---
-with st.sidebar.expander("📁 2. Your Current Assets", expanded=False):
+# --- EXPANDER 2: YOUR MONEY ---
+with st.sidebar.expander("💰 2. Your Money", expanded=False):
+    st.markdown("<small style='color: #94a3b8;'>Every scrap of wealth you have built up so far.</small>", unsafe_allow_html=True)
     equity_base = st.number_input(
         "Stocks & Mutual Funds (₹)", 
         min_value=0, value=12000000, step=500000
@@ -115,27 +117,28 @@ with st.sidebar.expander("📁 2. Your Current Assets", expanded=False):
     st.markdown(f'<div class="indian-words">👉 {format_indian_words(debt_base)}</div>', unsafe_allow_html=True)
 
     metals_base = st.number_input(
-        "Gold & Silver (₹)", 
+        "Gold & Silver (🛡️ Tangible Safety) (₹)", 
         min_value=0, value=3000000, step=100000
     )
     st.markdown(f'<div class="indian-words">👉 {format_indian_words(metals_base)}</div>', unsafe_allow_html=True)
 
     real_estate_base = st.number_input(
-        "Your Home Value (₹)", 
+        "Current Home Market Value (₹)", 
         min_value=0, value=15000000, step=1000000
     )
     st.markdown(f'<div class="indian-words">👉 {format_indian_words(real_estate_base)}</div>', unsafe_allow_html=True)
 
-# --- EXPANDER 3: LIABILITIES ---
-with st.sidebar.expander("📁 3. Debts & Loans", expanded=False):
+# --- EXPANDER 3: YOUR LOANS ---
+with st.sidebar.expander("⚠️ 3. Your Loans", expanded=False):
+    st.markdown("<small style='color: #94a3b8;'>Outstanding liabilities that will heavily restrict your freedom if income stops.</small>", unsafe_allow_html=True)
     home_loan_base = st.number_input(
-        "Home Loan Outstanding (₹)", 
+        "Home Loan Balance Outstanding (₹)", 
         min_value=0, value=4500000, step=500000
     )
     st.markdown(f'<div class="indian-words">👉 {format_indian_words(home_loan_base)}</div>', unsafe_allow_html=True)
 
     other_loan_base = st.number_input(
-        "Other Loans (Car / Personal) (₹)", 
+        "Other Loans (Car, Personal, Credit Card Debt) (₹)", 
         min_value=0, value=800000, step=100000
     )
     st.markdown(f'<div class="indian-words">👉 {format_indian_words(other_loan_base)}</div>', unsafe_allow_html=True)
@@ -149,15 +152,36 @@ st.markdown("Your interactive survival sandbox. Adjust the parameters below to g
 
 st.divider()
 
-# --- THE GRIPPING CRISIS SLIDERS ---
-st.subheader("🚨 The Crisis Test")
-st.markdown("Drag these sliders into negative zones to simulate market and lifestyle shocks.")
+# --- CRISIS HEADLINE & RESET ENGINE ---
+col_head, col_btn = st.columns([5, 1])
+with col_head:
+    st.subheader("🚨 The Crisis Test")
+    st.markdown("Drag these sliders into negative zones to simulate market and lifestyle shocks.")
 
+# Handle reset capability via Streamlit state keys
+if "reset_trigger" not in st.session_state:
+    st.session_state.reset_trigger = False
+
+with col_btn:
+    st.write("") # Layout alignment spacing
+    if st.button("🔄 Reset Crisis Test", use_container_width=True):
+        st.session_state.reset_trigger = not st.session_state.reset_trigger
+
+# Assign slider default values depending on reset state trigger
+default_val = 0 if st.session_state.reset_trigger else 0
+
+# --- THE GRIPPING CRISIS SLIDERS ---
 col_market, col_career = st.columns(2)
 
 with col_market:
     st.markdown("### Market Meltdowns")
-    equity_shift = st.slider("Stock Market Collapse / Rally (%)", min_value=-50, max_value=30, value=0, step=5)
+    
+    # We use explicit unique keys linked to our reset trigger logic
+    equity_shift = st.slider(
+        "Stock Market Collapse / Rally (%)", 
+        min_value=-50, max_value=30, value=0, step=5,
+        key=f"equity_slider_{st.session_state.reset_trigger}"
+    )
     
     # Dynamic text feedback for the Equity Crisis Slider
     if equity_shift == 0:
@@ -172,7 +196,11 @@ with col_market:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Sudden Post-Election Bull Run</span>", unsafe_allow_html=True)
 
     st.write("") # Spacer
-    metals_shift = st.slider("Gold & Silver Collapse / Rally (%)", min_value=-20, max_value=40, value=0, step=5)
+    metals_shift = st.slider(
+        "Gold & Silver Collapse / Rally (%)", 
+        min_value=-20, max_value=40, value=0, step=5,
+        key=f"metals_slider_{st.session_state.reset_trigger}"
+    )
     if metals_shift > 0:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🪙 Gold acting as a defensive flight-to-safety shield</span>", unsafe_allow_html=True)
     elif metals_shift < 0:
@@ -182,14 +210,22 @@ with col_market:
 
 with col_career:
     st.markdown("### Lifestyle Cash Drains")
-    expense_shift = st.slider("Sudden Family Expense Shock (Monthly Spike) (₹)", min_value=0, max_value=150000, value=0, step=10000)
+    expense_shift = st.slider(
+        "Sudden Family Expense Shock (Monthly Spike) (₹)", 
+        min_value=0, max_value=150000, value=0, step=10000,
+        key=f"expense_slider_{st.session_state.reset_trigger}"
+    )
     if expense_shift > 0:
         st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 Simulating a recurring ₹{expense_shift:,.0f} drain (Medical emergencies / Dependent parent care / School fee hikes)</span>", unsafe_allow_html=True)
     else:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Lifestyle operating at optimized baseline burn</span>", unsafe_allow_html=True)
 
     st.write("") # Spacer
-    re_liquidation = st.slider("Desperation Play: Liquidate Your Home (₹ Realized Capital)", min_value=0, max_value=int(real_estate_base), value=0, step=1000000)
+    re_liquidation = st.slider(
+        "Desperation Play: Liquidate Your Home (₹ Realized Capital)", 
+        min_value=0, max_value=int(real_estate_base), value=0, step=1000000,
+        key=f"re_slider_{st.session_state.reset_trigger}"
+    )
     
     # Initialize rent penalty variables
     simulated_monthly_rent = 0
