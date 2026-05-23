@@ -113,7 +113,7 @@ def format_indian_words(number):
 # ==========================================
 if "current_age" not in st.session_state: st.session_state.current_age = 40
 if "monthly_burn" not in st.session_state: st.session_state.monthly_burn = 100000
-if "annual_spikes" not in st.session_state.annual_spikes: st.session_state.annual_spikes = 240000
+if "annual_spikes" not in st.session_state: st.session_state.annual_spikes = 240000
 if "equity_base" not in st.session_state: st.session_state.equity_base = 12000000
 if "debt_base" not in st.session_state: st.session_state.debt_base = 9500000
 if "metals_base" not in st.session_state: st.session_state.metals_base = 3000000
@@ -244,7 +244,6 @@ with col_sl1:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Bull Run</span>", unsafe_allow_html=True)
 
 with col_sl2:
-    # Downside range expanded to -70 to match equities perfectly
     metals_shift = st.number_input(
         "Gold/Silver Shift (%)", 
         min_value=-70, max_value=120, value=0, step=5,
