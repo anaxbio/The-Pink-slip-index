@@ -113,7 +113,7 @@ def format_indian_words(number):
 # ==========================================
 if "current_age" not in st.session_state: st.session_state.current_age = 40
 if "monthly_burn" not in st.session_state: st.session_state.monthly_burn = 100000
-if "annual_spikes" not in st.session_state: st.session_state.annual_spikes = 240000
+if "annual_spikes" not in st.session_state.annual_spikes: st.session_state.annual_spikes = 240000
 if "equity_base" not in st.session_state: st.session_state.equity_base = 12000000
 if "debt_base" not in st.session_state: st.session_state.debt_base = 9500000
 if "metals_base" not in st.session_state: st.session_state.metals_base = 3000000
@@ -218,13 +218,11 @@ st.divider()
 # ==========================================
 col_sl1, col_sl2, col_sl3, col_sl4, col_btn = st.columns([2, 2, 2, 2, 1])
 
-# Formulate dynamic key targets to support reset functions cleanly
 eq_box_key = f"equity_box_{st.session_state.reset_trigger}"
 met_box_key = f"metals_box_{st.session_state.reset_trigger}"
 exp_box_key = f"expense_box_{st.session_state.reset_trigger}"
 re_box_key = f"re_box_{st.session_state.reset_trigger}"
 
-# Pre-fetch housing input target logic to style boundaries dynamically
 current_re_val = st.session_state.get(re_box_key, 0)
 is_housing_broken = current_re_val > 0
 
@@ -246,9 +244,10 @@ with col_sl1:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Bull Run</span>", unsafe_allow_html=True)
 
 with col_sl2:
+    # Downside range expanded to -70 to match equities perfectly
     metals_shift = st.number_input(
         "Gold/Silver Shift (%)", 
-        min_value=-40, max_value=120, value=0, step=5,
+        min_value=-70, max_value=120, value=0, step=5,
         key=met_box_key
     )
     if metals_shift == 0:
@@ -274,7 +273,6 @@ with col_sl3:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Expenses</span>", unsafe_allow_html=True)
 
 with col_sl4:
-    # Safe structural enclosure wrapping neatly around the micro stepping input field
     border_color = "#ef4444" if is_housing_broken else "#334155"
     box_label = "💥 BREAKING HOUSE" if is_housing_broken else "🏡 Housing Safe"
     
