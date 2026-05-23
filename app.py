@@ -220,9 +220,9 @@ with col_sl1:
     if equity_shift == 0:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Markets</span>", unsafe_allow_html=True)
     elif equity_shift == -10:
-        st.markdown("<span class='crisis-text' style='color:#facc15;'>⚠️ Correction</span>", unsafe_allow_html=True)
+        st.markdown("<span class='crisis-text' style='color:#facc15;'>⚠️ Market Correction</span>", unsafe_allow_html=True)
     elif -30 <= equity_shift < -10:
-        st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Sector Crash</span>", unsafe_allow_html=True)
+        st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Market Crash</span>", unsafe_allow_html=True)
     elif equity_shift < -30:
         st.markdown("<span class='crisis-text' style='color:#ef4444;'>🚨 Global Crisis</span>", unsafe_allow_html=True)
     else:
@@ -234,12 +234,16 @@ with col_sl2:
         min_value=-20, max_value=40, value=0, step=5,
         key=f"metals_slider_{st.session_state.reset_trigger}"
     )
-    if metals_shift > 0:
-        st.markdown("<span class='crisis-text' style='color:#4ade80;'>🪙 Flight-to-Safety</span>", unsafe_allow_html=True)
-    elif metals_shift < 0:
-        st.markdown("<span class='crisis-text' style='color:#ef4444;'>📉 Liquidity Squeeze</span>", unsafe_allow_html=True)
+    if metals_shift == 0:
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Markets</span>", unsafe_allow_html=True)
+    elif metals_shift == -10:
+        st.markdown("<span class='crisis-text' style='color:#facc15;'>⚠️ Market Correction</span>", unsafe_allow_html=True)
+    elif -30 <= metals_shift < -10:
+        st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Market Crash</span>", unsafe_allow_html=True)
+    elif metals_shift < -30:
+        st.markdown("<span class='crisis-text' style='color:#ef4444;'>🚨 Global Crisis</span>", unsafe_allow_html=True)
     else:
-        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟡 Intrinsic Baseline</span>", unsafe_allow_html=True)
+        st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Bull Run</span>", unsafe_allow_html=True)
 
 with col_sl3:
     expense_shift = st.slider(
@@ -248,9 +252,9 @@ with col_sl3:
         key=f"expense_slider_{st.session_state.reset_trigger}"
     )
     if expense_shift > 0:
-        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 +₹{expense_shift:,.0f}/mo drain</span>", unsafe_allow_html=True)
+        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 +₹{expense_shift:,.0f}/mo Added Outflow</span>", unsafe_allow_html=True)
     else:
-        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Optimized Burn</span>", unsafe_allow_html=True)
+        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Expenses</span>", unsafe_allow_html=True)
 
 with col_sl4:
     re_liquidation = st.slider(
