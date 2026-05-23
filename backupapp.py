@@ -53,6 +53,25 @@ st.markdown("""
         margin-top: 4px;
         display: block;
     }
+    .emergency-box {
+        border: 1px solid #475569;
+        background-color: #0f172a;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+    .emergency-title {
+        color: #f1f5f9;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    .emergency-meta {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 15px;
+    }
     .hero-banner {
         border-radius: 10px;
         padding: 24px;
@@ -207,9 +226,9 @@ if "reset_trigger" not in st.session_state:
 st.divider()
 
 # ==========================================
-# HORIZONTAL SLIDER GRID WITH ALIGNED RESET
+# LIQUID FACTORS: 3-COLUMN CONTROL SHELF
 # ==========================================
-col_sl1, col_sl2, col_sl3, col_sl4, col_btn = st.columns([2, 2, 2, 2, 1])
+col_sl1, col_sl2, col_sl3 = st.columns([3, 3, 3])
 
 with col_sl1:
     equity_shift = st.slider(
@@ -256,37 +275,53 @@ with col_sl3:
     else:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Expenses</span>", unsafe_allow_html=True)
 
-with col_sl4:
-    re_liquidation = st.slider(
-        "Liquidate Home Value (₹)", 
-        min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
-        key=f"re_slider_{st.session_state.reset_trigger}"
-    )
-    if re_liquidation > 0:
-        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Liquidating ₹{re_liquidation:,.0f}</span>", unsafe_allow_html=True)
-    else:
-        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Property Untouched</span>", unsafe_allow_html=True)
-
-with col_btn:
-    st.write("")
-    st.write("")
-    if st.button("🔄 Reset", use_container_width=True):
+# Align reset button cleanly above the emergency protocol container border
+col_spacer, col_reset_align = st.columns([8, 1])
+with col_reset_align:
+    if st.button("🔄 Reset All", use_container_width=True):
         st.session_state.reset_trigger = not st.session_state.reset_trigger
 
-# --- DYNAMIC HOMELESS WARNING FIELD ---
+# ==========================================
+# ISOLATED EMERGENCY PROTOCOL: HOUSING
+# ==========================================
+st.markdown('<div class="emergency-box">', unsafe_allow_html=True)
+st.markdown('<div class="emergency-title">🛑 Emergency Protocol: Touching Permanent Shelter</div>', unsafe_allow_html=True)
+st.markdown('<div class="emergency-meta">Real estate is highly illiquid. Realizing distress capital can take 3 to 6 months of aggressive price cutting in a crisis.</div>', unsafe_allow_html=True)
+
+re_liquidation = st.slider(
+    "Desperation Play: Liquidate Your Home Value (₹ Realized)", 
+    min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
+    key=f"re_slider_{st.session_state.reset_trigger}",
+    label_visibility="collapsed"
+)
+
+# Progressive Tiered Trauma Labels
+re_pct = (re_liquidation / st.session_state.real_estate_base) * 100 if st.session_state.real_estate_base > 0 else 0
+if re_liquidation == 0:
+    st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Home fully protected (Status Quo intact)</span>", unsafe_allow_html=True)
+elif re_pct <= 25:
+    st.markdown(f"<span class='crisis-text' style='color:#facc15;'>⚠️ Partial Equity Release ({re_pct:.0f}% Liquidated) - Refinancing or taking a top-up loan under severe stress</span>", unsafe_allow_html=True)
+elif re_pct <= 75:
+    st.markdown(f"<span class='crisis-text' style='color:#f97316;'>🔥 Severe Distress ({re_pct:.0f}% Liquidated) - Selling and downsizing your primary stability to a significantly smaller property</span>", unsafe_allow_html=True)
+else:
+    st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🚨 Absolute Liquidation ({re_pct:.0f}% Liquidated) - Complete exit from property ownership to fund immediate cash drain</span>", unsafe_allow_html=True)
+
+# Dynamic Tenancy and Rent Engine
 simulated_monthly_rent = 0
 if re_liquidation > 0:
     st.write("")
-    col_warn, col_rent_input = st.columns([3, 3])
+    col_warn, col_rent_input = st.columns([5, 4])
     with col_warn:
-        st.warning("⚠️ HOMELESS WARNING: Liquidating your house means you must rent a home. Define your emergency rent allocation.")
+        st.warning("⚠️ FORCED TENANCY ALERT: You are choosing to liquidate your permanent shelter. You must now allocate a chunk of your monthly survival capital to pay rent indefinitely.")
     with col_rent_input:
         suggested_rent = int((st.session_state.real_estate_base * 0.03) / 12)
         simulated_monthly_rent = st.number_input(
-            "Emergency Alternative Monthly Rent (₹)",
+            "Set Your Emergency Budget for Alternative Monthly Rent (₹)",
             min_value=5000, max_value=500000, value=suggested_rent, step=5000
         )
         st.markdown(f'<div class="indian-words">👉 Rent factored in: {format_indian_words(simulated_monthly_rent)} per month</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ==========================================
@@ -401,11 +436,6 @@ for yr in range(1, 51):
     funded_years += 1
 
 max_safe_age = min(st.session_state.current_age + funded_years, 100)
-
-# Calculate long-term baseline reference target index comparison check
-initial_liquid = (st.session_state.equity_base * (1 + (equity_shift / 100)) + st.session_state.metals_base * (1 + (metals_shift / 100)) + st.session_state.debt_base + re_liquidation) - total_debts
-target_fire_corpus = ((st.session_state.monthly_burn + expense_shift + (st.session_state.annual_spikes/12) + simulated_monthly_rent) * 12 * 25) + total_debts
-old_age_safety_pct = ((initial_liquid + adj_home_value) / target_fire_corpus) * 100 if target_fire_corpus > 0 else 100.0
 
 
 # ==========================================
