@@ -53,6 +53,13 @@ st.markdown("""
         margin-top: 4px;
         display: block;
     }
+    .in-line-warning-box {
+        border: 1px solid #ef4444;
+        background-color: #1e1b4b;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+    }
     .hero-banner {
         border-radius: 10px;
         padding: 24px;
@@ -207,24 +214,29 @@ if "reset_trigger" not in st.session_state:
 st.divider()
 
 # ==========================================
-# UNIFIED GRID ARCHITECTURE WITH SHOCK CHECK
+# ULTRA COMPACT STEPPING INPUT ROW
 # ==========================================
 col_sl1, col_sl2, col_sl3, col_sl4, col_btn = st.columns([2, 2, 2, 2, 1])
 
-# Pre-evaluate the housing state to determine container color styling immediately
-re_slider_key = f"re_slider_{st.session_state.reset_trigger}"
-current_re_val = st.session_state.get(re_slider_key, 0)
+# Formulate dynamic key targets to support reset functions cleanly
+eq_box_key = f"equity_box_{st.session_state.reset_trigger}"
+met_box_key = f"metals_box_{st.session_state.reset_trigger}"
+exp_box_key = f"expense_box_{st.session_state.reset_trigger}"
+re_box_key = f"re_box_{st.session_state.reset_trigger}"
+
+# Pre-fetch housing input target logic to style boundaries dynamically
+current_re_val = st.session_state.get(re_box_key, 0)
 is_housing_broken = current_re_val > 0
 
 with col_sl1:
-    equity_shift = st.slider(
+    equity_shift = st.number_input(
         "Stocks Collapse/Rally (%)", 
-        min_value=-50, max_value=30, value=0, step=5,
-        key=f"equity_slider_{st.session_state.reset_trigger}"
+        min_value=-70, max_value=50, value=0, step=5,
+        key=eq_box_key
     )
     if equity_shift == 0:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Markets</span>", unsafe_allow_html=True)
-    elif equity_shift == -10:
+    elif -10 <= equity_shift < 0:
         st.markdown("<span class='crisis-text' style='color:#facc15;'>⚠️ Market Correction</span>", unsafe_allow_html=True)
     elif -30 <= equity_shift < -10:
         st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Market Crash</span>", unsafe_allow_html=True)
@@ -234,14 +246,14 @@ with col_sl1:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Bull Run</span>", unsafe_allow_html=True)
 
 with col_sl2:
-    metals_shift = st.slider(
+    metals_shift = st.number_input(
         "Gold/Silver Shift (%)", 
-        min_value=-20, max_value=40, value=0, step=5,
-        key=f"metals_slider_{st.session_state.reset_trigger}"
+        min_value=-40, max_value=120, value=0, step=5,
+        key=met_box_key
     )
     if metals_shift == 0:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Markets</span>", unsafe_allow_html=True)
-    elif metals_shift == -10:
+    elif -10 <= metals_shift < 0:
         st.markdown("<span class='crisis-text' style='color:#facc15;'>⚠️ Market Correction</span>", unsafe_allow_html=True)
     elif -30 <= metals_shift < -10:
         st.markdown("<span class='crisis-text' style='color:#f97316;'>🔥 Severe Market Crash</span>", unsafe_allow_html=True)
@@ -251,10 +263,10 @@ with col_sl2:
         st.markdown("<span class='crisis-text' style='color:#4ade80;'>🚀 Bull Run</span>", unsafe_allow_html=True)
 
 with col_sl3:
-    expense_shift = st.slider(
+    expense_shift = st.number_input(
         "Monthly Expense Shock (₹)", 
         min_value=0, max_value=150000, value=0, step=10000,
-        key=f"expense_slider_{st.session_state.reset_trigger}"
+        key=exp_box_key
     )
     if expense_shift > 0:
         st.markdown(f"<span class='crisis-text' style='color:#f97316;'>💸 +₹{expense_shift:,.0f}/mo Added Outflow</span>", unsafe_allow_html=True)
@@ -262,35 +274,34 @@ with col_sl3:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Expenses</span>", unsafe_allow_html=True)
 
 with col_sl4:
-    # Native container block wrapping around the slider dynamically 
+    # Safe structural enclosure wrapping neatly around the micro stepping input field
     border_color = "#ef4444" if is_housing_broken else "#334155"
-    bg_color = "#1e1b4b" if is_housing_broken else "transparent"
-    box_label = "💥 BREAKING PERMANENT SHELTER" if is_housing_broken else "🏡 Housing Integrity Vault"
+    box_label = "💥 BREAKING HOUSE" if is_housing_broken else "🏡 Housing Safe"
     
     with st.container(border=True):
         st.markdown(f"<small style='color: {border_color}; font-weight:700;'>{box_label}</small>", unsafe_allow_html=True)
-        re_liquidation = st.slider(
-            "Liquidate Home (₹ Realized)", 
+        re_liquidation = st.number_input(
+            "Liquidate Home (₹)", 
             min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
-            key=re_slider_key
+            key=re_box_key,
+            label_visibility="collapsed"
         )
         re_pct = (re_liquidation / st.session_state.real_estate_base) * 100 if st.session_state.real_estate_base > 0 else 0
         if re_liquidation == 0:
-            st.markdown("<span class='crisis-text' style='color:#4ade80;'>🏡 Home Fully Protected</span>", unsafe_allow_html=True)
+            st.markdown("<span class='crisis-text' style='color:#4ade80;'>🏡 Intact</span>", unsafe_allow_html=True)
         elif re_pct <= 25:
-            st.markdown(f"<span class='crisis-text' style='color:#facc15;'>⚠️ Stress Refinance ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='crisis-text' style='color:#facc15;'>⚠️ Top-up ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
         elif re_pct <= 75:
-            st.markdown(f"<span class='crisis-text' style='color:#f97316;'>🔥 Forced Downsize ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='crisis-text' style='color:#f97316;'>🔥 Downsize ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🚨 Full Property Exit ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🚨 Full Exit ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
 
 with col_btn:
-    st.write("")
     st.write("")
     if st.button("🔄 Reset", use_container_width=True):
         st.session_state.reset_trigger = not st.session_state.reset_trigger
 
-# --- DYNAMIC FORCED TENANCY INPUT (UNDER ROW) ---
+# --- DYNAMIC FORCED TENANCY INPUT ---
 simulated_monthly_rent = 0
 if re_liquidation > 0:
     st.write("")
