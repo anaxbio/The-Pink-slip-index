@@ -189,7 +189,7 @@ elif active_drawer == "⚠️ 3. Your Loans":
 # ==========================================
 # MAIN DASHBOARD HEADER & VISIBLE AGE ANCHOR
 # ==========================================
-col_title, col_age_input, col_btn = st.columns([4, 2, 1])
+col_title, col_age_input = st.columns([4, 2])
 
 with col_title:
     st.title("The Pink Slip Index")
@@ -204,18 +204,12 @@ with col_age_input:
 if "reset_trigger" not in st.session_state:
     st.session_state.reset_trigger = False
 
-with col_btn:
-    st.write("") 
-    st.write("") 
-    if st.button("🔄 Reset Sliders", use_container_width=True):
-        st.session_state.reset_trigger = not st.session_state.reset_trigger
-
 st.divider()
 
 # ==========================================
-# HORIZONTAL SLIDER GRID (COMPACT COMPRESSION)
+# HORIZONTAL SLIDER GRID WITH ALIGNED RESET
 # ==========================================
-col_sl1, col_sl2, col_sl3, col_sl4 = st.columns(4)
+col_sl1, col_sl2, col_sl3, col_sl4, col_btn = st.columns([2, 2, 2, 2, 1])
 
 with col_sl1:
     equity_shift = st.slider(
@@ -268,6 +262,13 @@ with col_sl4:
         st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🏠 Liquidating ₹{re_liquidation:,.0f}</span>", unsafe_allow_html=True)
     else:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Property Untouched</span>", unsafe_allow_html=True)
+
+with col_btn:
+    # Use empty text blocks to push the button down so it anchors vertically with the track lines of the sliders
+    st.write("")
+    st.write("")
+    if st.button("🔄 Reset", use_container_width=True):
+        st.session_state.reset_trigger = not st.session_state.reset_trigger
 
 # --- DYNAMIC HOMELESS WARNING FIELD ---
 simulated_monthly_rent = 0
@@ -398,6 +399,11 @@ for yr in range(1, 51):
 
 max_safe_age = min(st.session_state.current_age + funded_years, 100)
 
+# Calculate long-term baseline reference target index comparison check
+initial_liquid = (st.session_state.equity_base * (1 + (equity_shift / 100)) + st.session_state.metals_base * (1 + (metals_shift / 100)) + st.session_state.debt_base + re_liquidation) - total_debts
+target_fire_corpus = ((st.session_state.monthly_burn + expense_shift + (st.session_state.annual_spikes/12) + simulated_monthly_rent) * 12 * 25) + total_debts
+old_age_safety_pct = ((initial_liquid + adj_home_value) / target_fire_corpus) * 100 if target_fire_corpus > 0 else 100.0
+
 
 # ==========================================
 # VISUALIZING THE METRICS
@@ -462,7 +468,7 @@ with col2:
 # ==========================================
 st.write("")
 st.write("")
-st.subheader("🔄 What Your Balance Sheet Looks Like Now")
+st.subheader("🔄 What Your Balance Balance Sheet Looks Like Now")
 
 disp_equity = st.session_state.equity_base * (1 + (equity_shift / 100))
 disp_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
