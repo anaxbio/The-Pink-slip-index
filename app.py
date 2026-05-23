@@ -53,13 +53,6 @@ st.markdown("""
         margin-top: 4px;
         display: block;
     }
-    .in-line-warning-box {
-        border: 1px solid #ef4444;
-        background-color: #1e1b4b;
-        border-radius: 8px;
-        padding: 12px;
-        box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
-    }
     .hero-banner {
         border-radius: 10px;
         padding: 24px;
@@ -214,9 +207,14 @@ if "reset_trigger" not in st.session_state:
 st.divider()
 
 # ==========================================
-# UNIFIED GRID ARCHITECTURE WITH INTEGRATED WARNING
+# UNIFIED GRID ARCHITECTURE WITH SHOCK CHECK
 # ==========================================
 col_sl1, col_sl2, col_sl3, col_sl4, col_btn = st.columns([2, 2, 2, 2, 1])
+
+# Pre-evaluate the housing state to determine container color styling immediately
+re_slider_key = f"re_slider_{st.session_state.reset_trigger}"
+current_re_val = st.session_state.get(re_slider_key, 0)
+is_housing_broken = current_re_val > 0
 
 with col_sl1:
     equity_shift = st.slider(
@@ -264,23 +262,27 @@ with col_sl3:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Expenses</span>", unsafe_allow_html=True)
 
 with col_sl4:
-    # Use an in-line warning box to isolate the house asset visually without shifting the grid
-    st.markdown('<div class="in-line-warning-box">', unsafe_allow_html=True)
-    re_liquidation = st.slider(
-        "🚨 Liquidate Home (₹ Realized)", 
-        min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
-        key=f"re_slider_{st.session_state.reset_trigger}"
-    )
-    re_pct = (re_liquidation / st.session_state.real_estate_base) * 100 if st.session_state.real_estate_base > 0 else 0
-    if re_liquidation == 0:
-        st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Home Protected</span>", unsafe_allow_html=True)
-    elif re_pct <= 25:
-        st.markdown(f"<span class='crisis-text' style='color:#facc15;'>⚠️ Stress Refinance ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
-    elif re_pct <= 75:
-        st.markdown(f"<span class='crisis-text' style='color:#f97316;'>🔥 Forced Downsize ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🚨 Full Exit ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Native container block wrapping around the slider dynamically 
+    border_color = "#ef4444" if is_housing_broken else "#334155"
+    bg_color = "#1e1b4b" if is_housing_broken else "transparent"
+    box_label = "💥 BREAKING PERMANENT SHELTER" if is_housing_broken else "🏡 Housing Integrity Vault"
+    
+    with st.container(border=True):
+        st.markdown(f"<small style='color: {border_color}; font-weight:700;'>{box_label}</small>", unsafe_allow_html=True)
+        re_liquidation = st.slider(
+            "Liquidate Home (₹ Realized)", 
+            min_value=0, max_value=int(st.session_state.real_estate_base), value=0, step=1000000,
+            key=re_slider_key
+        )
+        re_pct = (re_liquidation / st.session_state.real_estate_base) * 100 if st.session_state.real_estate_base > 0 else 0
+        if re_liquidation == 0:
+            st.markdown("<span class='crisis-text' style='color:#4ade80;'>🏡 Home Fully Protected</span>", unsafe_allow_html=True)
+        elif re_pct <= 25:
+            st.markdown(f"<span class='crisis-text' style='color:#facc15;'>⚠️ Stress Refinance ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
+        elif re_pct <= 75:
+            st.markdown(f"<span class='crisis-text' style='color:#f97316;'>🔥 Forced Downsize ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<span class='crisis-text' style='color:#ef4444;'>🚨 Full Property Exit ({re_pct:.0f}%)</span>", unsafe_allow_html=True)
 
 with col_btn:
     st.write("")
@@ -288,7 +290,7 @@ with col_btn:
     if st.button("🔄 Reset", use_container_width=True):
         st.session_state.reset_trigger = not st.session_state.reset_trigger
 
-# --- DYNAMIC FORCED TENANCY预算 INPUT (UNDER ROW) ---
+# --- DYNAMIC FORCED TENANCY INPUT (UNDER ROW) ---
 simulated_monthly_rent = 0
 if re_liquidation > 0:
     st.write("")
