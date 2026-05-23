@@ -207,8 +207,11 @@ if "reset_trigger" not in st.session_state:
 st.divider()
 
 # ==========================================
-# UNIFIED HORIZONTAL SLIDER GRID 
+# CRISIS TEST & UNIFIED HORIZONTAL SLIDER GRID
 # ==========================================
+st.subheader("🚨 Crisis Test")
+st.write("")
+
 col_sl1, col_sl2, col_sl3, col_sl4, col_btn = st.columns([2, 2, 2, 2, 1])
 
 with col_sl1:
@@ -485,7 +488,7 @@ disp_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
 df_portfolio = pd.DataFrame({
     "Asset Type": ["Stocks & Mutual Funds", "Fixed Income & Deposits", "Gold & Silver", "Remaining Home Value", "⚠️ Outstanding Loans (Debt)"],
     "Your Baseline": [st.session_state.equity_base, st.session_state.debt_base, st.session_state.metals_base, st.session_state.real_estate_base, total_debts],
-    "Simulated Change": [disp_equity - st.session_state.equity_base, 0, disp_metals - st.session_state.metals_base, -re_liquidation, 0],
+    "Crisis Test Impact": [disp_equity - st.session_state.equity_base, 0, disp_metals - st.session_state.metals_base, -re_liquidation, 0],
     "Survival Portfolio Value": [disp_equity, sim_debt if runway_months > 0 else 0, disp_metals, adj_home_value, total_debts]
 })
 
@@ -493,7 +496,7 @@ df_portfolio = pd.DataFrame({
 st.dataframe(
     df_portfolio.style.format({
         "Your Baseline": "{:,.0f}",
-        "Simulated Change": "{:+,.0f}",
+        "Crisis Test Impact": "{:+,.0f}",
         "Survival Portfolio Value": "{:,.0f}"
     }), 
     use_container_width=True,
