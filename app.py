@@ -54,22 +54,23 @@ st.markdown("""
         display: block;
     }
     .emergency-box {
-        border: 1px solid #475569;
-        background-color: #0f172a;
+        border: 2px solid #ef4444;
+        background-color: #1e1b4b;
         border-radius: 10px;
         padding: 20px;
-        margin-top: 15px;
-        margin-bottom: 15px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
     }
     .emergency-title {
-        color: #f1f5f9;
+        color: #fca5a5;
         font-size: 1.1rem;
         font-weight: 700;
         margin-bottom: 2px;
     }
     .emergency-meta {
-        color: #64748b;
-        font-size: 0.8rem;
+        color: #cbd5e1;
+        font-size: 0.85rem;
         margin-bottom: 15px;
     }
     .hero-banner {
@@ -226,9 +227,9 @@ if "reset_trigger" not in st.session_state:
 st.divider()
 
 # ==========================================
-# LIQUID FACTORS: 3-COLUMN CONTROL SHELF
+# RESTORED RESTRICTED ROW STRUCTURE (4 COLUMNS)
 # ==========================================
-col_sl1, col_sl2, col_sl3 = st.columns([3, 3, 3])
+col_sl1, col_sl2, col_sl3, col_btn = st.columns([2, 2, 2, 1])
 
 with col_sl1:
     equity_shift = st.slider(
@@ -275,14 +276,14 @@ with col_sl3:
     else:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🟢 Normal Expenses</span>", unsafe_allow_html=True)
 
-# Align reset button cleanly above the emergency protocol container border
-col_spacer, col_reset_align = st.columns([8, 1])
-with col_reset_align:
-    if st.button("🔄 Reset All", use_container_width=True):
+with col_btn:
+    st.write("")
+    st.write("")
+    if st.button("🔄 Reset", use_container_width=True):
         st.session_state.reset_trigger = not st.session_state.reset_trigger
 
 # ==========================================
-# ISOLATED EMERGENCY PROTOCOL: HOUSING
+# SEPARATED SHOCK BLOCK: HOUSING EMERGENCY
 # ==========================================
 st.markdown('<div class="emergency-box">', unsafe_allow_html=True)
 st.markdown('<div class="emergency-title">🛑 Emergency Protocol: Touching Permanent Shelter</div>', unsafe_allow_html=True)
@@ -436,6 +437,11 @@ for yr in range(1, 51):
     funded_years += 1
 
 max_safe_age = min(st.session_state.current_age + funded_years, 100)
+
+# Calculate long-term baseline reference target index comparison check
+initial_liquid = (st.session_state.equity_base * (1 + (equity_shift / 100)) + st.session_state.metals_base * (1 + (metals_shift / 100)) + st.session_state.debt_base + re_liquidation) - total_debts
+target_fire_corpus = ((st.session_state.monthly_burn + expense_shift + (st.session_state.annual_spikes/12) + simulated_monthly_rent) * 12 * 25) + total_debts
+old_age_safety_pct = ((initial_liquid + adj_home_value) / target_fire_corpus) * 100 if target_fire_corpus > 0 else 100.0
 
 
 # ==========================================
