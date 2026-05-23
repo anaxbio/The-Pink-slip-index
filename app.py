@@ -264,7 +264,6 @@ with col_sl4:
         st.markdown("<span class='crisis-text' style='color:#94a3b8;'>🏡 Property Untouched</span>", unsafe_allow_html=True)
 
 with col_btn:
-    # Use empty text blocks to push the button down so it anchors vertically with the track lines of the sliders
     st.write("")
     st.write("")
     if st.button("🔄 Reset", use_container_width=True):
@@ -468,23 +467,23 @@ with col2:
 # ==========================================
 st.write("")
 st.write("")
-st.subheader("🔄 What Your Balance Balance Sheet Looks Like Now")
+st.subheader("🔄 Your Money Vault")
 
 disp_equity = st.session_state.equity_base * (1 + (equity_shift / 100))
 disp_metals = st.session_state.metals_base * (1 + (metals_shift / 100))
 
 df_portfolio = pd.DataFrame({
-    "Asset Class / Liability": ["Stocks & Mutual Funds", "Fixed Income & Deposits", "Gold & Silver", "Remaining Home Value", "⚠️ Outstanding Loans (Debt)"],
+    "Asset Type - Your Portfolio": ["Stocks & Mutual Funds", "Fixed Income & Deposits", "Gold & Silver", "Remaining Home Value", "⚠️ Outstanding Loans (Debt)"],
     "Your Baseline (₹)": [st.session_state.equity_base, st.session_state.debt_base, st.session_state.metals_base, st.session_state.real_estate_base, total_debts],
-    "Simulated Change (₹)": [disp_equity - st.session_state.equity_base, 0, disp_metals - st.session_state.metals_base, -re_liquidation, 0],
-    "Active Reality Value (₹)": [disp_equity, sim_debt if runway_months > 0 else 0, disp_metals, adj_home_value, total_debts]
+    "Crisis Test Impact (₹)": [disp_equity - st.session_state.equity_base, 0, disp_metals - st.session_state.metals_base, -re_liquidation, 0],
+    "Survival Portfolio Value (₹)": [disp_equity, sim_debt if runway_months > 0 else 0, disp_metals, adj_home_value, total_debts]
 })
 
 st.dataframe(
     df_portfolio.style.format({
         "Your Baseline (₹)": "{:,.0f}",
-        "Simulated Change (₹)": "{:+,.0f}",
-        "Active Reality Value (₹)": "{:,.0f}"
+        "Crisis Test Impact (₹)": "{:+,.0f}",
+        "Survival Portfolio Value (₹)": "{:,.0f}"
     }), 
     use_container_width=True,
     hide_index=True
