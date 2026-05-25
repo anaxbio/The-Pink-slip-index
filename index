@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pink Slip Index</title>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        .container { display: flex; max-width: 1600px; margin: auto; gap: 40px; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 320px; flex-shrink: 0; background: #0f172a; }
+        .drawer-btn { background: none; border: none; color: #94a3b8; width: 100%; text-align: left; padding: 12px 10px; font-size: 1.1rem; cursor: pointer; transition: 0.2s; border-radius: 5px; }
+        .drawer-btn.active { color: white; background: #1e293b; font-weight: bold; }
+        .drawer-btn:hover { background: #1e293b; }
+        .drawer { display: none; padding: 15px 10px; }
+        .drawer.active { display: block; }
+        
+        /* Typography & Inputs */
+        h1 { font-size: 2.2rem; margin-top: 0; }
+        h2 { font-size: 1.5rem; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 40px; display: flex; justify-content: space-between; align-items: center; }
+        label { display: block; font-size: 0.85rem; color: #94a3b8; margin-top: 15px; margin-bottom: 5px; }
+        input[type="number"], input[type="range"] { width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 5px; box-sizing: border-box; }
+        .indian-words { color: #38bdf8; font-size: 0.85rem; margin-top: 5px; margin-bottom: 15px; font-weight: 500; }
+        
+        /* Buttons */
+        .reset-btn { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .reset-btn:hover { background: #475569; }
+
+        /* Age Input specific */
+        .age-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .age-input { width: 250px; }
+        
+        /* Crisis Text */
+        .crisis-text { font-weight: bold; font-size: 0.85rem; margin-top: 4px; display: block; }
+        
+        /* Main Layout */
+        .main { flex-grow: 1; }
+        .slider-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        
+        /* Banner & Cards */
+        .hero-banner { border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 25px; border: 1px solid dashed; transition: all 0.3s; }
+        .hero-title { font-size: 2.8rem; font-weight: 800; margin: 0; }
+        .hero-subtitle { font-size: 1.1rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+        .metric-card { background: #1e293b; padding: 24px; border-radius: 10px; border: 1px solid #334155; }
+        .metric-value { font-size: 2.2rem; font-weight: 800; color: #f8fafc; margin: 5px 0; }
+        
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #1e293b; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #334155; }
+        th { text-align: right; color: #94a3b8; font-weight: 600; font-size: 0.9rem; }
+        th:first-child, td:first-child { text-align: left; }
+        
+        /* Warnings */
+        .warning-box { background: #422006; border: 1px solid #f59e0b; color: #fef3c7; padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2 style="margin-top: 0;">🛡️ Your Money Vault</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem;">Select a secure compartment to calibrate your parameters. Other categories will auto-hide.</p>
+            
+            <button class="drawer-btn active" onclick="setDrawer('costs')">📉 1. Your Costs</button>
+            <button class="drawer-btn" onclick="setDrawer('money')">💰 2. Your Money</button>
+            <button class="drawer-btn" onclick="setDrawer('loans')">⚠️ 3. Your Loans</button>
+
+            <div id="drawer-costs" class="drawer active">
+                <label>Standard Monthly Expenses (₹)</label>
+                <input type="number" id="monthly_burn" value="100000" step="10000" oninput="calculate()">
+                <div id="words_monthly_burn" class="indian-words"></div>
+
+                <label>Annual Big Spikes (₹)</label>
+                <input type="number" id="annual_spikes" value="240000" step="20000" oninput="calculate()">
+                <div id="words_annual_spikes" class="indian-words"></div>
+            </div>
+
+            <div id="drawer-money" class="drawer">
+                <label>Stocks & Mutual Funds (₹)</label>
+                <input type="number" id="equity_base" value="12000000" step="500000" oninput="calculate()">
+                <div id="words_equity_base" class="indian-words"></div>
+
+                <label>Fixed Deposits / EPF / PPF (₹)</label>
+                <input type="number" id="debt_base" value="9500000" step="500000" oninput="calculate()">
+                <div id="words_debt_base" class="indian-words"></div>
+
+                <label>Gold & Silver (₹)</label>
+                <input type="number" id="metals_base" value="3000000" step="100000" oninput="calculate()">
+                <div id="words_metals_base" class="indian-words"></div>
+
+                <label>Current Home Market Value (₹)</label>
+                <input type="number" id="real_estate_base" value="15000000" step="1000000" oninput="calculate()">
+                <div id="words_real_estate_base" class="indian-words"></div>
+            </div>
+
+            <div id="drawer-loans" class="drawer">
+                <label>Home Loan Balance Outstanding (₹)</label>
+                <input type="number" id="home_loan_base" value="4500000" step="500000" oninput="calculate()">
+                <div id="words_home_loan_base" class="indian-words"></div>
+
+                <label>Other Loans (₹)</label>
+                <input type="number" id="other_loan_base" value="800000" step="100000" oninput="calculate()">
+                <div id="words_other_loan_base" class="indian-words"></div>
+            </div>
+        </div>
+        
+        <div class="main">
+            <div class="age-container">
+                <div>
+                    <h1>The Pink Slip Index</h1>
+                    <p style="color: #94a3b8; margin: 0;">Your interactive survival sandbox. Adjust parameters horizontally below to run active stress testing.</p>
+                </div>
+                <div class="age-input">
+                    <label style="margin-top: 0; color: #f8fafc;">⚡ Enter Your Current Age</label>
+                    <input type="number" id="current_age" value="40" oninput="calculate()">
+                </div>
+            </div>
+            
+            <h2>
+                🚨 Crisis Test 
+                <button class="reset-btn" onclick="resetCrisisSliders()">🔄 Reset</button>
+            </h2>
+            
+            <div class="slider-grid">
+                <div>
+                    <label>Stocks Collapse/Rally (%)</label>
+                    <input type="range" id="equity_shift" min="-70" max="50" value="0" step="5" oninput="calculate()">
+                    <span id="txt_equity" class="crisis-text"></span>
+                </div>
+                <div>
+                    <label>Gold/Silver Shift (%)</label>
+                    <input type="range" id="metals_shift" min="-70" max="120" value="0" step="5" oninput="calculate()">
+                    <span id="txt_metals" class="crisis-text"></span>
+                </div>
+                <div>
+                    <label>Monthly Expense Shock (₹)</label>
+                    <input type="range" id="expense_shock" min="0" max="150000" step="10000" value="0" oninput="calculate()">
+                    <span id="txt_expense" class="crisis-text"></span>
+                </div>
+                <div>
+                    <label>Liquidate Home (₹ Realized)</label>
+                    <input type="range" id="re_liquidation" min="0" max="15000000" step="1000000" value="0" oninput="calculate()">
+                    <span id="txt_re" class="crisis-text"></span>
+                </div>
+            </div>
+
+            <div id="rent_warning" class="warning-box" style="display: none;">
+                <div style="flex-grow: 1;">⚠️ <strong>FORCED TENANCY ALERT:</strong> You are choosing to liquidate your permanent shelter. You must now allocate a chunk of your monthly survival capital to pay rent indefinitely.</div>
+                <div style="width: 250px;">
+                    <label style="color: #fef3c7; margin-top: 0;">Emergency Monthly Rent (₹)</label>
+                    <input type="number" id="simulated_monthly_rent" value="0" step="5000" oninput="calculate()" style="background: #78350f; border-color: #b45309;">
+                </div>
+            </div>
+
+            <h2>📊 Your Reality</h2>
+
+            <div id="banner" class="hero-banner">
+                <div id="status_text" class="hero-subtitle"></div>
+                <div id="hero_text" class="hero-title"></div>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div style="color:#94a3b8; font-weight:600; text-transform:uppercase; font-size: 0.9rem;">Immediate Shield (Liquid Money)</div>
+                    <div class="metric-value"><span id="val_months"></span> <span style="font-size: 1.1rem; color: #94a3b8;">Mos</span> <span style="font-size: 1.5rem; color: #38bdf8;" id="val_years"></span></div>
+                    <div style="color:#38bdf8; font-size: 0.85rem;">Portfolio gain - inflation 6% (Keeping your home roof intact)</div>
+                </div>
+                <div class="metric-card">
+                    <div style="color:#94a3b8; font-weight:600; text-transform:uppercase; font-size: 0.9rem;">Total Shield (Total Estate)</div>
+                    <div class="metric-value" id="val_total"></div>
+                    <div style="color:#38bdf8; font-size: 0.85rem;">If you sell the home for emergency funds</div>
+                </div>
+            </div>
+
+            <h2>🔄 Your Money Vault</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset Type</th>
+                        <th>Your Baseline</th>
+                        <th>Crisis Test Impact</th>
+                        <th>Survival Portfolio Value</th>
+                    </tr>
+                </thead>
+                <tbody id="vault_table">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const fmt = (num) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(num);
+
+        function formatIndianWords(number) {
+            if (number === 0) return "Zero Rupees";
+            const crores = Math.floor(number / 10000000);
+            let remainder = number % 10000000;
+            const lakhs = Math.floor(remainder / 100000);
+            remainder = remainder % 100000;
+            const thousands = Math.floor(remainder / 1000);
+            const rupees = remainder % 1000;
+            
+            let result = [];
+            if (crores > 0) result.push(`${crores} Crore${crores > 1 ? 's' : ''}`);
+            if (lakhs > 0) result.push(`${lakhs} Lakh${lakhs > 1 ? 's' : ''}`);
+            if (thousands > 0) result.push(`${thousands} Thousand`);
+            if (rupees > 0 || result.length === 0) result.push(`${rupees} Rupee${rupees > 1 || rupees === 0 ? 's' : ''}`);
+            return result.join(" ");
+        }
+
+        function setDrawer(drawerId) {
+            document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.drawer-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('drawer-' + drawerId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function resetCrisisSliders() {
+            document.getElementById('equity_shift').value = 0;
+            document.getElementById('metals_shift').value = 0;
+            document.getElementById('expense_shock').value = 0;
+            document.getElementById('re_liquidation').value = 0;
+            calculate();
+        }
+
+        async function calculate() {
+            document.getElementById('re_liquidation').max = document.getElementById('real_estate_base').value;
+
+            const keys = ['current_age', 'monthly_burn', 'annual_spikes', 'equity_base', 'debt_base', 'metals_base', 'real_estate_base', 'home_loan_base', 'other_loan_base', 'equity_shift', 'metals_shift', 'expense_shock', 're_liquidation', 'simulated_monthly_rent'];
+            let payload = {};
+            keys.forEach(k => payload[k] = Number(document.getElementById(k).value));
+
+            // Update Indian Words UI
+            const suffixMap = { monthly_burn: " per month", annual_spikes: " per year" };
+            ['monthly_burn', 'annual_spikes', 'equity_base', 'debt_base', 'metals_base', 'real_estate_base', 'home_loan_base', 'other_loan_base'].forEach(id => {
+                const suffix = suffixMap[id] || "";
+                document.getElementById('words_' + id).innerHTML = "👉 " + formatIndianWords(payload[id]) + suffix;
+            });
+
+            // Crisis Text Updates
+            const eq = payload.equity_shift;
+            document.getElementById('txt_equity').innerHTML = eq === 0 ? '<span style="color:#94a3b8">🟢 Normal Markets</span>' : eq < -30 ? '<span style="color:#ef4444">🚨 Global Crisis</span>' : eq < -10 ? '<span style="color:#f97316">🔥 Severe Market Crash</span>' : eq < 0 ? '<span style="color:#facc15">⚠️ Market Correction</span>' : '<span style="color:#4ade80">🚀 Bull Run</span>';
+            
+            const met = payload.metals_shift;
+            document.getElementById('txt_metals').innerHTML = met === 0 ? '<span style="color:#94a3b8">🟢 Normal Markets</span>' : met < -30 ? '<span style="color:#ef4444">🚨 Global Crisis</span>' : met < -10 ? '<span style="color:#f97316">🔥 Severe Market Crash</span>' : met < 0 ? '<span style="color:#facc15">⚠️ Market Correction</span>' : '<span style="color:#4ade80">🚀 Bull Run</span>';
+            
+            const exp = payload.expense_shock;
+            document.getElementById('txt_expense').innerHTML = exp > 0 ? `<span style="color:#f97316">💸 +₹${fmt(exp)}/mo Added Outflow</span>` : '<span style="color:#94a3b8">🟢 Normal Expenses</span>';
+
+            const re = payload.re_liquidation;
+            const re_pct = payload.real_estate_base > 0 ? (re / payload.real_estate_base) * 100 : 0;
+            document.getElementById('txt_re').innerHTML = re === 0 ? '<span style="color:#4ade80">🏡 Home Protected</span>' : re_pct <= 25 ? `<span style="color:#facc15">⚠️ Stress Refinance (${fmt(re_pct)}%)</span>` : re_pct <= 75 ? `<span style="color:#f97316">🔥 Forced Downsize (${fmt(re_pct)}%)</span>` : `<span style="color:#ef4444">🚨 Absolute Liquidation (${fmt(re_pct)}%)</span>`;
+
+            // Rent Warning Logic
+            const rentWarning = document.getElementById('rent_warning');
+            const rentInput = document.getElementById('simulated_monthly_rent');
+            if (re > 0) {
+                if (rentWarning.style.display === 'none') {
+                    rentInput.value = Math.round((payload.real_estate_base * 0.03) / 12);
+                    payload.simulated_monthly_rent = Number(rentInput.value);
+                }
+                rentWarning.style.display = 'flex';
+            } else {
+                rentWarning.style.display = 'none';
+                payload.simulated_monthly_rent = 0;
+                rentInput.value = 0;
+            }
+
+            const res = await fetch('/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            
+            const banner = document.getElementById('banner');
+            banner.style.backgroundColor = data.banner_bg;
+            banner.style.borderColor = data.banner_border;
+            banner.style.color = data.banner_text;
+            
+            document.getElementById('status_text').innerText = data.status_label;
+            document.getElementById('hero_text').innerText = data.hero_title;
+            
+            document.getElementById('val_months').innerText = fmt(data.runway_months);
+            document.getElementById('val_years').innerText = `(${data.runway_years} Yrs)`;
+            document.getElementById('val_total').innerText = `Life Secured until Age ${data.max_safe_age}`;
+
+            const tBody = document.getElementById('vault_table');
+            tBody.innerHTML = `
+                <tr><td>Stocks & Mutual Funds</td><td>${fmt(payload.equity_base)}</td><td>${data.disp_equity - payload.equity_base > 0 ? '+' : ''}${fmt(data.disp_equity - payload.equity_base)}</td><td>${fmt(data.disp_equity)}</td></tr>
+                <tr><td>Fixed Income & Deposits</td><td>${fmt(payload.debt_base)}</td><td>0</td><td>${fmt(data.sim_debt_survival)}</td></tr>
+                <tr><td>Gold & Silver</td><td>${fmt(payload.metals_base)}</td><td>${data.disp_metals - payload.metals_base > 0 ? '+' : ''}${fmt(data.disp_metals - payload.metals_base)}</td><td>${fmt(data.disp_metals)}</td></tr>
+                <tr><td>Remaining Home Value</td><td>${fmt(payload.real_estate_base)}</td><td>-${fmt(payload.re_liquidation)}</td><td>${fmt(data.adj_home_value)}</td></tr>
+                <tr><td style="color:#facc15">⚠️ Outstanding Loans (Debt)</td><td>${fmt(data.total_debts)}</td><td>0</td><td>${fmt(data.total_debts)}</td></tr>
+            `;
+        }
+        
+        calculate();
+    </script>
+</body>
+</html>
