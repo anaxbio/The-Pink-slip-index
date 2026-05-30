@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pink Slip Index</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #FAFAFA;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --accent-safe: #10B981;
+            --accent-danger: #EF4444;
+            --accent-primary: #2563EB;
+        }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 20px; margin: 0; -webkit-font-smoothing: antialiased; }
+        
+        #app-container { display: block; }
+        
+        .container { display: flex; width: 95%; max-width: 2400px; margin: auto; gap: 40px; }
+        
+        .sidebar { width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; border: none; padding: 0; }
+        
+        .sidebar-cashflow-badge { background: #F0FDF4; border: 2px solid #BBF7D0; color: #166534; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s; text-align: center; }
+        .cashflow-badge-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; font-weight: 700; }
+        .cashflow-value-display { font-size: 1.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.02em; }
+        
+        .age-sidebar-anchor { background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .age-sidebar-anchor label { margin-top: 0; color: var(--text-main); font-weight: 700; font-size: 0.85rem; }
+        .age-sidebar-anchor input { background: #FAFAFA; border: 1px solid var(--border-color); margin-top: 8px; font-size: 1.1rem; }
+
+        .drawer-nav-container { display: flex; flex-direction: column; gap: 8px; }
+        .drawer-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); width: 100%; text-align: left; padding: 14px 16px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-radius: 8px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.01); }
+        .drawer-btn.active { color: var(--accent-primary); border-color: #BFDBFE; background: #EFF6FF; }
+        .drawer-btn:hover:not(.active) { background: #F1F5F9; color: var(--text-main); }
+        
+        .drawer { display: none; padding-top: 10px; }
+        .drawer.active { display: block; }
+        
+        .input-group { padding: 20px; border-radius: 12px; margin-bottom: 20px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .input-group h3 { margin-top: 0; padding-bottom: 12px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0; color: var(--text-main); border-bottom: 1px solid var(--border-color); }
+        
+        .expense-grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .expense-item-cell { min-width: 0; }
+        label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+        input[type="number"], input[type="range"] { width: 100%; padding: 10px; background: #FAFAFA; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; box-sizing: border-box; font-size: 1rem; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; }
+        input:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); background: #FFFFFF; }
+        .indian-words { color: var(--accent-primary); font-size: 0.75rem; margin-top: 6px; margin-bottom: 10px; font-weight: 500; }
+        
+        .running-total-box { background: #F8FAFC; border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        
+        .main { flex-grow: 1; min-width: 0; padding-top: 10px; }
+        
+        .header-split-wrapper { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; margin-bottom: 30px; }
+        .header-branding-pane { display: flex; flex-direction: column; gap: 15px; }
+        
+        .main-title-block { display: flex; align-items: center; gap: 15px; }
+        .main-title-block h1 { font-size: 3.2rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.04em; margin: 0; line-height: 1.1; }
+        .premium-tag { font-size: 0.85rem; color: var(--accent-primary); background: #EFF6FF; padding: 5px 12px; border-radius: 6px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid #DBEAFE; }
+        
+        .panic-compact-wrapper { display: flex; align-items: center; gap: 20px; background: #FEF2F2; padding: 14px 20px; border-radius: 12px; border: 2px solid #FECACA; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.03); align-self: flex-start; transition: all 0.3s ease; }
+        .panic-compact-text { display: flex; flex-direction: column; }
+        .panic-compact-title { color: #DC2626; font-weight: 900; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .panic-compact-sub { font-size: 0.75rem; color: #991B1B; font-weight: 600; text-transform: uppercase; margin-top: 2px; line-height: 1.3; }
+        
+        .founder-intro { font-size: 1.05rem; line-height: 1.6; color: var(--text-muted); font-weight: 400; max-width: 550px; margin: 0; padding-left: 20px; border-left: 4px solid var(--border-color); }
+        .founder-intro strong { color: var(--text-main); font-weight: 600; }
+
+        .control-bar { display: flex; align-items: center; gap: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; }
+        .control-bar h2 { margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; border: none; padding: 0; flex-shrink: 0; }
+        
+        .preset-pill-strip { display: flex; gap: 10px; align-items: center; flex-grow: 1; }
+        .preset-pill-btn { background: var(--bg-card); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: 600; color: var(--text-main); transition: all 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.01); outline: none; }
+        .preset-pill-btn:hover:not(.disabled-btn) { border-color: #CBD5E1; background: #F8FAFC; cursor: pointer; }
+        .preset-pill-btn.active { background: #2563EB; border-color: #2563EB; color: #FFFFFF; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15); }
+        
+        .slider-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-bottom: 30px; }
+        .crisis-text { font-weight: 600; font-size: 0.8rem; margin-top: 8px; display: block; }
+        
+        .warning-box { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; padding: 16px 20px; border-radius: 8px; display: flex; align-items: center; gap: 20px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.05); }
+
+        .output-header { margin-top: 40px; font-size: 1.4rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .hero-banner { border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 30px; border: 1px solid var(--border-color); background: var(--bg-card); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.04); transition: all 0.3s; }
+        .hero-title { font-size: 2.5rem; font-weight: 800; margin: 0; letter-spacing: -0.03em; color: var(--text-main); }
+        .hero-subtitle { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; color: var(--text-muted); }
+        
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .metric-card { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); display: flex; flex-direction: column; justify-content: center; }
+        .metric-label { color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; margin-bottom: 10px; }
+        .metric-value { font-size: 2.2rem; font-weight: 800; color: var(--text-main); font-family: 'JetBrains Mono', monospace; letter-spacing: -0.02em; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); }
+        th, td { padding: 16px 20px; text-align: right; border-bottom: 1px solid var(--border-color); }
+        th { text-align: right; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; background: #F8FAFC; }
+        th:first-child, td:first-child { text-align: left; }
+        td { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-main); }
+        td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; }
+        tr:last-child td { border-bottom: none; }
+
+        .tax-wrapper { margin-top: 30px; margin-bottom: 40px; background: #FAFAFA; padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .tax-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+        .tax-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin: 0; }
+        .tax-total { font-size: 1.5rem; font-weight: 800; color: var(--accent-danger); font-family: 'JetBrains Mono', monospace; }
+        .tax-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .tax-item { background: var(--bg-card); padding: 18px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.01); }
+        .tax-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .tax-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); font-family: 'JetBrains Mono', monospace; }
+
+        .accordion-toggle { cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; user-select: none; }
+        .accordion-toggle:hover { color: var(--accent-primary); }
+        .group-content { display: none; padding-top: 15px; }
+        .group-content.active { display: block; }
+        .panic-sub-input { border-left: 2px solid #F59E0B; padding-left: 15px; margin-top: 15px; background: #FFFBEB; padding: 15px; border-radius: 0 8px 8px 0; }
+        
+        .switch { position: relative; display: inline-block; width: 56px; height: 30px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #FECACA; transition: .3s; border-radius: 30px; }
+        .slider:before { position: absolute; content: "OFF"; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; color: #DC2626; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        /* THE MAGIC FIX: The Trap CSS */
+        .pro-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #2563EB, #1E40AF);
+            color: #FFFFFF !important;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin-left: 10px;
+            letter-spacing: 0.05em;
+            vertical-align: middle;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+            text-transform: uppercase;
+        }
+        
+        .disabled-section {
+            cursor: pointer; /* Suggests interactivity to spring the trap */
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+        .disabled-section:hover {
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+            background: #F8FAFC !important;
+        }
+        
+        /* Disable interaction on the inputs, pass clicks to the wrapper */
+        .disabled-section input, 
+        .disabled-section button, 
+        .disabled-section .switch {
+            pointer-events: none !important; 
+            background-color: #F1F5F9 !important;
+            border-color: #E2E8F0 !important;
+        }
+        
+        /* Gray out text to signify it's locked */
+        .disabled-section label:not(.pro-badge), 
+        .disabled-section .tax-label, 
+        .disabled-section .tax-value, 
+        .disabled-section .panic-compact-title, 
+        .disabled-section .panic-compact-sub,
+        .disabled-section .tax-title,
+        .disabled-section span.crisis-text,
+        .disabled-section input {
+            color: #94A3B8 !important;
+        }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 4, 7, 0.95); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-content { background: #0D0F14; border: 1px solid #1E293B; border-radius: 16px; padding: 40px; width: 90%; max-width: 500px; color: #F1F5F9; position: relative; text-align: center; }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; color: #64748B; cursor: pointer; transition: 0.2s; padding: 5px; line-height: 1; }
+        .modal-close:hover { color: #EF4444; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div class="container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>🛡️ Networth Vault</h2>
+                </div>
+                
+                <div class="age-sidebar-anchor">
+                    <label>⚡ Current Age Baseline</label>
+                    <input type="number" id="current_age" value="40">
+                </div>
+
+                <div class="sidebar-cashflow-badge" id="cashflow_box">
+                    <span class="cashflow-badge-label" id="cashflow_label">Net Cash Flow</span>
+                    <span class="cashflow-value-display" id="lbl_net_cashflow">₹0</span>
+                </div>
+                
+                <div class="drawer-nav-container">
+                    <button class="drawer-btn active" id="nav-costs">📉 1. Your Current Cost</button>
+                    <button class="drawer-btn" id="nav-income">💸 2. Your Income</button>
+                    <button class="drawer-btn" id="nav-money">💰 3. Your Assets</button>
+                    <button class="drawer-btn" id="nav-loans">⚠️ 4. Your Liabilities</button>
+                </div>
+
+                <div id="drawer-costs" class="drawer active">
+                    <div class="running-total-box"><span>Monthly Burn:</span><span>₹<span id="lbl_total_monthly_burn">0</span></span></div>
+                    <div class="running-total-box" style="background:#F0FDF4; border-color:#BBF7D0; color:#166534;"><span>Annual Spikes:</span><span>₹<span id="lbl_total_annual_spikes">0</span></span></div>
+
+                    <div class="disabled-section" style="padding: 10px; margin: 10px -10px; border: 1px solid transparent;" onclick="openPremiumModal()">
+                        <label style="margin-top:0; font-weight: 700;">🔥 Inflation Stress (%) <span class="pro-badge">🔒 PRO</span></label>
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            <input type="range" value="6" style="flex-grow:1;">
+                            <span style="font-weight:700; font-family:'JetBrains Mono', monospace; color: #94A3B8;">6%</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <h3 class="accordion-toggle">Standard Monthly Costs <span>▲</span></h3>
+                        <div class="group-content active">
+                            <div class="expense-grid-layout">
+                                <div class="expense-item-cell"><label>Rent / Home EMI (₹)</label><input type="number" id="exp_rent_emi" value="0"><div id="words_exp_rent_emi" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Other EMIs (₹)</label><input type="number" id="exp_other_emi" value="0"><div id="words_exp_other_emi" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Food & Kirana (₹)</label><input type="number" id="exp_food_kirana" value="10000"><div id="words_exp_food_kirana" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Utilities & Bills (₹)</label><input type="number" id="exp_utilities" value="3000"><div id="words_exp_utilities" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Domestic Help (₹)</label><input type="number" id="exp_domestic_help" value="2500"><div id="words_exp_domestic_help" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Fuel & Commute (₹)</label><input type="number" id="exp_fuel_commute" value="5000"><div id="words_exp_fuel_commute" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Dining Out (₹)</label><input type="number" id="exp_dining_out" value="5000"><div id="words_exp_dining_out" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Misc 1 (₹)</label><input type="number" id="exp_other_1" value="0"><div id="words_exp_other_1" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Misc 2 (₹)</label><input type="number" id="exp_other_2" value="0"><div id="words_exp_other_2" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Buffer (₹)</label><input type="number" id="exp_misc_buffer" value="0"><div id="words_exp_misc_buffer" class="indian-words"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <h3 class="accordion-toggle">Annual Large Expenses <span>▼</span></h3>
+                        <div class="group-content">
+                            <div class="expense-grid-layout">
+                                <div class="expense-item-cell"><label>Insurance (₹)</label><input type="number" id="ann_insurance" value="0"><div id="words_ann_insurance" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Education (₹)</label><input type="number" id="ann_school_fees" value="100000"><div id="words_ann_school_fees" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Festivals (₹)</label><input type="number" id="ann_festivals" value="0"><div id="words_ann_festivals" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Maintenance (₹)</label><input type="number" id="ann_maintenance" value="0"><div id="words_ann_maintenance" class="indian-words"></div></div>
+                                <div class="expense-item-cell" style="grid-column: span 2;"><label>Vacations (₹)</label><input type="number" id="ann_vacations" value="0"><div id="words_ann_vacations" class="indian-words"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="drawer-income" class="drawer">
+                    <div class="input-group">
+                        <h3 class="accordion-toggle">Active Cash Flow <span>▲</span></h3>
+                        <div class="group-content active">
+                            <div class="expense-grid-layout">
+                                <div class="expense-item-cell"><label>Net Salary (₹)</label><input type="number" id="inc_salary" value="50000"><div id="words_inc_salary" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Business (₹)</label><input type="number" id="inc_business" value="0"><div id="words_inc_business" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Consulting (₹)</label><input type="number" id="inc_consulting" value="0"><div id="words_inc_consulting" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Rental Income (₹)</label><input type="number" id="inc_rental" value="0"><div id="words_inc_rental" class="indian-words"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="drawer-money" class="drawer">
+                    <div class="running-total-box"><span>Total Assets:</span><span>₹<span id="lbl_total_assets">0</span></span></div>
+                    <div class="input-group">
+                        <h3 class="accordion-toggle">Your Asset Portfolio Base <span>▲</span></h3>
+                        <div class="group-content active">
+                            <div class="expense-grid-layout">
+                                <div class="expense-item-cell" style="grid-column: span 2; font-weight:700; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">EQUITY COMPACT (10% p.a.)</div>
+                                <div class="expense-item-cell"><label>Direct Equity (₹)</label><input type="number" id="ast_demat" value="5000000"><div id="words_ast_demat" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Equity MFs/ETFs (₹)</label><input type="number" id="ast_mf_eq" value="0"><div id="words_ast_mf_eq" class="indian-words"></div></div>
+                                
+                                <div class="expense-item-cell disabled-section" style="grid-column: span 2; padding: 5px; margin: -5px;" onclick="openPremiumModal()">
+                                    <label>Sweat Equity / PE (₹) <span class="pro-badge">🔒 PRO</span></label>
+                                    <input type="number" value="0">
+                                </div>
+
+                                <div class="expense-item-cell" style="grid-column: span 2; font-weight:700; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 10px;">DEBT & FIXED INCOME (7% p.a.)</div>
+                                <div class="expense-item-cell"><label>Fixed Deposits (₹)</label><input type="number" id="ast_fd" value="5000000"><div id="words_ast_fd" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Debt MFs/ETFs (₹)</label><input type="number" id="ast_mf_debt" value="0"><div id="words_ast_mf_debt" class="indian-words"></div></div>
+                                
+                                <div class="expense-item-cell disabled-section" style="padding: 5px; margin: -5px;" onclick="openPremiumModal()">
+                                    <label>Bonds / NCDs (₹) <span class="pro-badge">🔒 PRO</span></label>
+                                    <input type="number" value="0">
+                                </div>
+                                <div class="expense-item-cell"><label>NPS Account (₹)</label><input type="number" id="ast_nps" value="0"><div id="words_ast_nps" class="indian-words"></div></div>
+
+                                <div class="expense-item-cell" style="grid-column: span 2; font-weight:700; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 10px;">HARD ASSETS & LIQUID (5% p.a.)</div>
+                                <div class="expense-item-cell"><label>Savings / Cash (₹)</label><input type="number" id="ast_cash" value="0"><div id="words_ast_cash" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Digital Gold (₹)</label><input type="number" id="ast_gold_digi" value="0"><div id="words_ast_gold_digi" class="indian-words"></div></div>
+                                <div class="expense-item-cell"><label>Primary Residence (₹)</label><input type="number" id="ast_re_primary" value="5000000"><div id="words_ast_re_primary" class="indian-words"></div></div>
+                                
+                                <div class="expense-item-cell disabled-section" style="padding: 5px; margin: -5px;" onclick="openPremiumModal()">
+                                    <label>Secondary Prop (₹) <span class="pro-badge">🔒 PRO</span></label>
+                                    <input type="number" value="0">
+                                </div>
+                                <div class="expense-item-cell" style="grid-column: span 2;"><label>Physical Gold (₹)</label><input type="number" id="ast_gold_phys" value="500000"><div id="words_ast_gold_phys" class="indian-words"></div></div>
+                            </div>
+                            
+                            <div class="panic-sub-input disabled-section" style="background: #F8FAFC; border-left-color: #E2E8F0; margin-top: 15px;" onclick="openPremiumModal()">
+                                <label>↳ STCG Exposure (₹) <span class="pro-badge">🔒 PRO</span></label><input type="number" value="0">
+                                <label>↳ Est. Taxable Prop Gain (₹) <span class="pro-badge">🔒 PRO</span></label><input type="number" value="0">
+                                <label>↳ Distress Penalty (%) <span class="pro-badge">🔒 PRO</span></label><input type="number" value="16">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="drawer-loans" class="drawer">
+                    <div class="running-total-box" style="background:#FFF5F5; border-color:#FECACA; color:#B91C1C;"><span>Total Debt:</span><span>₹<span id="lbl_total_liabilities">0</span></span></div>
+                    <div class="input-group">
+                        <h3 class="accordion-toggle">Outstanding Debt <span>▲</span></h3>
+                        <div class="group-content active">
+                            <div class="expense-grid-layout">
+                                <div class="expense-item-cell"><label>Primary Home Loan (₹)</label><input type="number" id="lia_home_primary" value="0"></div>
+                                <div class="expense-item-cell"><label>Second Prop Loan (₹)</label><input type="number" id="lia_home_second" value="0"></div>
+                                <div class="expense-item-cell"><label>Auto Loan (₹)</label><input type="number" id="lia_auto" value="0"></div>
+                                <div class="expense-item-cell"><label>Personal Loan (₹)</label><input type="number" id="lia_personal" value="0"></div>
+                                <div class="expense-item-cell"><label>Education Loan (₹)</label><input type="number" id="lia_education" value="0"></div>
+                                <div class="expense-item-cell"><label>Credit Cards (₹)</label><input type="number" id="lia_cc" value="0"></div>
+                                <div class="expense-item-cell" style="grid-column: span 2;"><label>Other Debt (₹)</label><input type="number" id="lia_other" value="0"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main">
+                <div class="header-split-wrapper">
+                    <div class="header-branding-pane">
+                        <div class="main-title-block">
+                            <h1>The Pink Slip Index</h1>
+                            <span class="premium-tag">BETA FREE</span>
+                        </div>
+                        
+                        <div class="panic-compact-wrapper disabled-section" style="border-color: #E2E8F0; background: #F8FAFC; box-shadow: none; align-self: flex-start;" onclick="openPremiumModal()">
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider" style="background-color: #CBD5E1;"></span>
+                            </label>
+                            <div class="panic-compact-text">
+                                <span class="panic-compact-title">🔥 EMERGENCY INCOME FREEZE <span class="pro-badge">🔒 PRO</span></span>
+                                <span class="panic-compact-sub">Flip switch to test a sudden career income stop</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="founder-intro">
+                        <em>As a CA and former MNC Finance Director, I engineered my own runway to a <strong>planned early retirement at age 41 in 2021</strong>. I built this index to replace standard spreadsheets—it maps your real asset yields directly against your true monthly lifestyle costs to ensure an uncompromised, data-proven runway.</em>
+                    </p>
+                </div>
+
+                <div class="control-bar">
+                    <h2>🚨 Stress Test Parameters</h2>
+                    
+                    <div class="preset-pill-strip disabled-section" style="flex-grow: 1; padding: 5px; margin: -5px;" onclick="openPremiumModal()">
+                        <button class="preset-pill-btn">📉 1992 Crash <span class="pro-badge">🔒 PRO</span></button>
+                        <button class="preset-pill-btn">☣️ 2008 Contagion <span class="pro-badge">🔒 PRO</span></button>
+                        <button class="preset-pill-btn">🦠 2020 Black Swan <span class="pro-badge">🔒 PRO</span></button>
+                        <button class="preset-pill-btn">🦅 Iran War Shock <span class="pro-badge">🔒 PRO</span></button>
+                    </div>
+                    
+                    <button class="reset-btn" id="btn-reset-sliders">🔄 Reset Sliders</button>
+                </div>
+                
+                <div class="slider-grid">
+                    <div><label>Stocks Shift (%)</label><input type="range" id="equity_shift" min="-70" max="50" value="0" step="5"><span id="txt_equity" class="crisis-text"></span></div>
+                    <div><label>Gold Shift (%)</label><input type="range" id="metals_shift" min="-70" max="120" value="0" step="5"><span id="txt_metals" class="crisis-text"></span></div>
+                    <div><label>Expense Shock (%)</label><input type="range" id="expense_shock" min="0" max="100" step="5" value="0"><span id="txt_expense" class="crisis-text"></span></div>
+                    
+                    <div class="disabled-section" style="padding: 10px; margin: -10px; border: 1px solid transparent;" onclick="openPremiumModal()">
+                        <label>Liquidate Home (Realized) <span class="pro-badge">🔒 PRO</span></label>
+                        <input type="range" value="0">
+                        <span class="crisis-text">🏡 Asset Intact</span>
+                    </div>
+                </div>
+
+                <div id="rent_warning" class="warning-box" style="display: none;">
+                    <div style="flex-grow: 1;">⚠️ <strong>FORCED TENANCY ALERT:</strong> Emergency monthly rent loop activated based on primary residence liquidation.</div>
+                    <div style="width: 200px;"><label style="margin-top: 0;">Emergency Rent (₹)</label><input type="number" id="simulated_monthly_rent" value="0" step="5000" style="background:#FFFFFF;"></div>
+                </div>
+
+                <div class="output-header">
+                    <span>📊 Portfolio Reality</span>
+                    <button class="reset-btn" style="border-color: var(--accent-danger); color: var(--accent-danger); background: transparent;" onclick="openPremiumModal()">💥 View Damage Report</button>
+                </div>
+                
+                <div id="banner" class="hero-banner">
+                    <div id="status_text" class="hero-subtitle"></div>
+                    <div id="hero_text" class="hero-title"></div>
+                </div>
+
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Immediate Shield (Liquid Capital)</div>
+                        <div class="metric-value"><span id="val_months" style="color: var(--accent-safe);"></span> <span style="font-size: 1.1rem; color: var(--text-muted); font-family: 'Inter', sans-serif;">Mos</span> <span style="font-size:1.5rem; color:var(--accent-primary);" id="val_years"></span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Shield (Post-Liquidation Estate)</div>
+                        <div class="metric-value" style="font-size: 1.6rem; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;" id="val_total"></div>
+                    </div>
+                </div>
+
+                <div class="tax-wrapper disabled-section" style="background: #F8FAFC; border-color: #E2E8F0; margin-top: 30px; margin-bottom: 40px;" onclick="openPremiumModal()">
+                    <div class="tax-header">
+                        <h3 class="tax-title">Hidden Exit Costs & Friction <span class="pro-badge">🔒 PRO ENGINE</span></h3>
+                        <div class="tax-total">-₹<span>4,520,000</span></div>
+                    </div>
+                    <div class="tax-grid">
+                        <div class="tax-item" style="background: #FFFFFF;"><div class="tax-label">Stock Taxes & Impact</div><div class="tax-value">₹1,250,000</div></div>
+                        <div class="tax-item" style="background: #FFFFFF;"><div class="tax-label">Property Exit Costs</div><div class="tax-value">₹2,800,000</div></div>
+                        <div class="tax-item" style="background: #FFFFFF;"><div class="tax-label">Debt & Metal Penalty</div><div class="tax-value">₹470,000</div></div>
+                    </div>
+                </div>
+
+                <div class="output-header" style="margin-top: 0; border: none; padding-bottom: 0;">
+                    <span style="font-size: 1.2rem;" id="table_header">🔄 Networth Vault Impact</span>
+                </div>
+                <table>
+                    <thead id="table_head"><tr><th>Asset Category</th><th>Your Baseline</th><th>Crisis Drift</th><th>Survival Value</th></tr></thead>
+                    <tbody id="vault_table"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔒 Premium Upsell Modal -->
+    <div id="premium_modal" class="modal-overlay" onclick="if(event.target === this) closePremiumModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePremiumModal()">✖</button>
+            <h2 style="margin-top: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em;">🔒 Premium Feature</h2>
+            <p style="color: #94A3B8; line-height: 1.6; margin-bottom: 30px; font-size: 1.05rem;">
+                This specific module is restricted to Premium Members. Upgrade now to unlock institutional-grade portfolio liquidation tranches, detailed tax friction audits, historical macro stress-testing, and dynamic inflation modeling.
+            </p>
+            <button class="preset-pill-btn active" style="padding: 14px 30px; font-size: 1.05rem; border-radius: 8px; width: 100%; border: none; box-shadow: 0 4px 12px rgba(37,99,235,0.4); pointer-events: auto !important; cursor: pointer;">Upgrade to Premium Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        const fmt = (num) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(num || 0);
+
+        function formatIndianWords(number) {
+            if (!number || number === 0) return "Zero Rupees";
+            const crores = Math.floor(number / 10000000); let remainder = number % 10000000;
+            const lakhs = Math.floor(remainder / 100000); remainder = remainder % 100000;
+            const thousands = Math.floor(remainder / 1000); const rupees = remainder % 1000;
+            let result = [];
+            if (crores > 0) result.push(`${crores} Crore${crores > 1 ? 's' : ''}`);
+            if (lakhs > 0) result.push(`${lakhs} Lakh${lakhs > 1 ? 's' : ''}`);
+            if (thousands > 0) result.push(`${thousands} Thousand`);
+            if (rupees > 0 || result.length === 0) result.push(`${rupees} Rupee${rupees > 1 || rupees === 0 ? 's' : ''}`);
+            return result.join(" ");
+        }
+
+        const bindDrawer = (btnId, drawerId) => {
+            document.getElementById(btnId).addEventListener('click', (e) => {
+                document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
+                document.querySelectorAll('.drawer-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(drawerId).classList.add('active');
+                e.target.classList.add('active');
+            });
+        };
+        bindDrawer('nav-costs', 'drawer-costs'); bindDrawer('nav-income', 'drawer-income'); bindDrawer('nav-money', 'drawer-money'); bindDrawer('nav-loans', 'drawer-loans');
+
+        document.getElementById('btn-reset-sliders').addEventListener('click', () => {
+            document.getElementById('equity_shift').value = 0; 
+            document.getElementById('metals_shift').value = 0; 
+            document.getElementById('expense_shock').value = 0; 
+            calculate();
+        });
+
+        function openPremiumModal() { document.getElementById('premium_modal').style.display = 'flex'; }
+        function closePremiumModal() { document.getElementById('premium_modal').style.display = 'none'; }
+
+        document.querySelectorAll('.accordion-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const content = this.nextElementSibling; const isOpen = content.classList.contains('active');
+                this.closest('.drawer').querySelectorAll('.group-content').forEach(c => c.classList.remove('active'));
+                this.closest('.drawer').querySelectorAll('.accordion-toggle span').forEach(s => s.innerText = '▼');
+                if (!isOpen) { content.classList.add('active'); this.querySelector('span').innerText = '▲'; }
+            });
+        });
+
+        // --- DUMMY MATH ENGINE (Free Variables Only) ---
+        function calculate() {
+            if(document.getElementById('app-container').style.display === 'none') return;
+
+            const current_age = Number(document.getElementById('current_age').value);
+            const inflation_pct = 6; // Locked at 6% for free tier
+
+            // 1. Silent Summation of Granular UI Inputs
+            const raw_monthly_burn = Number(document.getElementById('exp_rent_emi').value) + Number(document.getElementById('exp_other_emi').value) + Number(document.getElementById('exp_food_kirana').value) + Number(document.getElementById('exp_utilities').value) + Number(document.getElementById('exp_domestic_help').value) + Number(document.getElementById('exp_fuel_commute').value) + Number(document.getElementById('exp_dining_out').value) + Number(document.getElementById('exp_other_1').value) + Number(document.getElementById('exp_other_2').value) + Number(document.getElementById('exp_misc_buffer').value);
+            const raw_annual_spikes = Number(document.getElementById('ann_insurance').value) + Number(document.getElementById('ann_school_fees').value) + Number(document.getElementById('ann_festivals').value) + Number(document.getElementById('ann_maintenance').value) + Number(document.getElementById('ann_vacations').value);
+            
+            document.getElementById('lbl_total_monthly_burn').innerText = fmt(raw_monthly_burn);
+            document.getElementById('lbl_total_annual_spikes').innerText = fmt(raw_annual_spikes);
+
+            const equity_base = Number(document.getElementById('ast_demat').value) + Number(document.getElementById('ast_mf_eq').value); 
+            const debt_base = Number(document.getElementById('ast_fd').value) + Number(document.getElementById('ast_mf_debt').value) + Number(document.getElementById('ast_nps').value); 
+            const cash_base = Number(document.getElementById('ast_cash').value);
+            const metals_base = Number(document.getElementById('ast_gold_digi').value) + Number(document.getElementById('ast_gold_phys').value);
+            const real_estate_base = Number(document.getElementById('ast_re_primary').value); 
+            
+            document.getElementById('lbl_total_assets').innerText = fmt(equity_base + debt_base + cash_base + metals_base + real_estate_base);
+
+            const home_loan_base = Number(document.getElementById('lia_home_primary').value) + Number(document.getElementById('lia_home_second').value);
+            const other_loan_base = Number(document.getElementById('lia_auto').value) + Number(document.getElementById('lia_personal').value) + Number(document.getElementById('lia_education').value) + Number(document.getElementById('lia_cc').value) + Number(document.getElementById('lia_other').value);
+            document.getElementById('lbl_total_liabilities').innerText = fmt(home_loan_base + other_loan_base);
+
+            // 2. Crisis & Slider Shifts
+            const equity_shift = Number(document.getElementById('equity_shift').value);
+            const metals_shift = Number(document.getElementById('metals_shift').value);
+            const expense_shock_pct = Number(document.getElementById('expense_shock').value);
+
+            document.getElementById('txt_equity').innerHTML = equity_shift === 0 ? '<span style="color:var(--text-muted)">🟢 Baseline Markets</span>' : equity_shift < -30 ? '<span style="color:var(--accent-danger)">🚨 Systemic Crash</span>' : '<span style="color:#f59e0b">⚠️ Market Tailspin</span>';
+            document.getElementById('txt_metals').innerHTML = metals_shift === 0 ? '<span style="color:var(--text-muted)">🟢 Stable Gold</span>' : metals_shift > 30 ? '<span style="color:var(--accent-safe)">🚀 Safe Haven Rally</span>' : '<span style="color:#f59e0b">⚠️ Correction Drift</span>';
+            document.getElementById('txt_expense').innerHTML = expense_shock_pct > 0 ? `<span style="color:#f97316">💸 +${expense_shock_pct}% Shock Spikes</span>` : '<span style="color:var(--text-muted)">🟢 Base Burn</span>';
+            
+            // 3. Cash Flow Math
+            const total_inflow = Number(document.getElementById('inc_salary').value) + Number(document.getElementById('inc_business').value) + Number(document.getElementById('inc_consulting').value) + Number(document.getElementById('inc_rental').value);
+            const base_monthly_outflow = raw_monthly_burn + (raw_monthly_burn * (expense_shock_pct / 100)) + (raw_annual_spikes / 12);
+            const net_monthly_cashflow = total_inflow - (base_monthly_outflow * (1 + (inflation_pct / 100)));
+
+            const cashflowBox = document.getElementById('cashflow_box');
+            const cashflowLabel = document.getElementById('cashflow_label');
+            const cashflowVal = document.getElementById('lbl_net_cashflow');
+            if (net_monthly_cashflow >= 0) {
+                cashflowBox.style.background = '#F0FDF4'; cashflowBox.style.borderColor = '#BBF7D0'; cashflowBox.style.color = '#166534';
+                cashflowLabel.innerText = "CASH FLOW SURPLUS"; cashflowVal.innerText = "+₹" + fmt(net_monthly_cashflow);
+            } else {
+                cashflowBox.style.background = '#FEF2F2'; cashflowBox.style.borderColor = '#FECACA'; cashflowBox.style.color = '#991B1B';
+                cashflowLabel.innerText = "CASH FLOW DEFICIT"; cashflowVal.innerText = "-₹" + fmt(Math.abs(net_monthly_cashflow));
+            }
+
+            // 4. Basic Linear 600-Month Simulation Loop (No tax friction logic)
+            const final_equity = equity_base * (1 + (equity_shift / 100));
+            const final_metals = metals_base * (1 + (metals_shift / 100));
+            let liquid_pool = final_equity + debt_base + cash_base + final_metals;
+            liquid_pool = Math.max(0, liquid_pool - other_loan_base);
+            
+            let completed_months = 0;
+            let timeline_burn = base_monthly_outflow;
+
+            for (let m = 1; m <= 600; m++) {
+                let real_inflow = (current_age + (m/12)) >= 60 ? 0 : total_inflow; 
+                let monthly_deficit = timeline_burn - real_inflow;
+                
+                if (monthly_deficit > 0) {
+                    liquid_pool -= monthly_deficit;
+                    if (liquid_pool <= 0) break;
+                } else {
+                    liquid_pool += Math.abs(monthly_deficit);
+                }
+                
+                liquid_pool *= (1 + (0.07 / 12));
+                completed_months++;
+                if (m % 12 === 0) timeline_burn *= (1 + (inflation_pct / 100));
+            }
+
+            // 5. UI Output Updates
+            document.getElementById('val_months').innerText = fmt(completed_months); 
+            document.getElementById('val_years').innerText = `(${Math.round((completed_months/12) * 10) / 10} Yrs)`; 
+            document.getElementById('val_total').innerText = completed_months >= 600 ? "Networth level strong" : `Your Networth Shields You Until Age ${Math.round(current_age + (completed_months / 12))}`;
+
+            const banner = document.getElementById('banner');
+            if (completed_months < 6) {
+                banner.style.backgroundColor = "#FFF5F5"; banner.style.borderColor = "var(--accent-danger)";
+                document.getElementById('status_text').innerText = "🚨 LIQUIDITY LIQUIDATION OVERRUN TRIGGERED";
+                document.getElementById('hero_text').innerText = `Simulation Breach Point Discovered at Month ${Math.round(completed_months)}`;
+            } else {
+                banner.style.backgroundColor = "#ECFDF5"; banner.style.borderColor = "var(--accent-safe)";
+                document.getElementById('status_text').innerText = "🟢 RUNWAY CAPACITY SECURE";
+                document.getElementById('hero_text').innerText = `Your Networth Shields You Until Age ${Math.round(current_age + (completed_months / 12))}`;
+            }
+
+            const vault_table = document.getElementById('vault_table');
+            document.getElementById('table_header').innerText = "🔄 Networth Vault Impact Matrix";
+            document.getElementById('table_head').innerHTML = `<tr><th>Asset Segment Class</th><th>Your Baseline Value</th><th>Crisis Test Impact Delta</th><th>Survival Portfolio Balance</th></tr>`;
+            vault_table.innerHTML = `
+                <tr><td>Equity Compact Asset Base</td><td>${fmt(equity_base)}</td><td><span style="color: ${final_equity - equity_base >= 0 ? 'var(--accent-safe)' : 'var(--accent-danger)'}">${fmt(final_equity - equity_base)}</span></td><td>${fmt(final_equity)}</td></tr>
+                <tr><td>Fixed Income Debt Base</td><td>${fmt(debt_base)}</td><td><span>0</span></td><td>${fmt(debt_base)}</td></tr>
+                <tr><td>Precious Metals Holdings</td><td>${fmt(metals_base)}</td><td><span style="color:var(--accent-safe)">+${fmt(final_metals - metals_base)}</span></td><td>${fmt(final_metals)}</td></tr>
+                <tr><td>Real Estate Portfolio Base</td><td>${fmt(real_estate_base)}</td><td><span style="color:var(--text-muted)">0 (Locked)</span></td><td>${fmt(real_estate_base)}</td></tr>
+            `;
+        }
+
+        // Attach listeners to active inputs only
+        const activeInputsArr = [
+            'inc_salary', 'inc_business', 'inc_consulting', 'inc_rental', 'current_age',
+            'ast_demat', 'ast_mf_eq', 'ast_fd', 'ast_mf_debt', 'ast_nps', 'ast_cash', 'ast_gold_digi', 'ast_re_primary', 'ast_gold_phys',
+            'lia_home_primary', 'lia_home_second', 'lia_auto', 'lia_personal', 'lia_education', 'lia_cc', 'lia_other', 
+            'equity_shift', 'metals_shift', 'expense_shock',
+            'exp_rent_emi', 'exp_other_emi', 'exp_food_kirana', 'exp_utilities', 'exp_domestic_help', 'exp_fuel_commute', 'exp_dining_out', 'exp_other_1', 'exp_other_2', 'exp_misc_buffer',
+            'ann_insurance', 'ann_school_fees', 'ann_festivals', 'ann_maintenance', 'ann_vacations'
+        ];
+        
+        activeInputsArr.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', () => {
+                    let suffix = id.startsWith('exp_') || id.startsWith('inc_') ? " / mo" : id.startsWith('ann_') ? " / yr" : "";
+                    const wordDiv = document.getElementById('words_' + id);
+                    if (wordDiv) wordDiv.innerHTML = formatIndianWords(Number(el.value)) + suffix;
+                    calculate();
+                });
+            }
+        });
+
+        calculate();
+    </script>
+</body>
+</html>
