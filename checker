@@ -14,42 +14,29 @@ class VaultFlatPayload(BaseModel):
     inflation_slider: float
     panic_toggle: bool
 
-    inc_salary: float
-    inc_business: float
-    inc_consulting: float
-    inc_rental: float
+    # COMBINED INCOME FIELDS
+    total_active_inflows: float
+    total_passive_inflows: float
 
     # EXCHANGED THE 10 DETAILED EXPENSE DEFINITIONS FOR THE 2 AGREED INTERNAL SUM VARIABLES
     total_fixed_bank_emis: float
     total_inflating_lifestyle_costs: float
 
-    ann_insurance: float
-    ann_school_fees: float
-    ann_festivals: float
-    ann_maintenance: float
-    ann_vacations: float
+    # OPTIMIZED SINGLE ANNUAL SPENDING VALUE
+    total_annual_spikes: float
 
-    ast_demat: float
-    ast_mf_eq: float
-    ast_pe: float
-    ast_fd: float
-    ast_mf_debt: float
-    ast_bonds: float
-    ast_nps: float
-    ast_cash: float
-    ast_gold_digi: float
-    ast_re_primary: float
-    ast_re_second: float
-    ast_gold_phys: float
+    # OPTIMIZED PORTFOLIO MACRO BASES
+    total_equity_base: float
+    total_debt_base: float
+    total_cash_base: float
+    total_metals_base: float
+    total_real_estate_base: float
 
-    lia_home_primary: float
-    lia_home_second: float
-    lia_auto: float
-    lia_personal: float
-    lia_education: float
-    lia_cc: float
-    lia_other: float
+    # OPTIMIZED MERGED LIABILITY BLOCKS
+    total_mortgage_debts: float
+    total_other_debts: float
 
+    # CRITICAL STANDALONE PARAMS RETAINED FOR RUNWAY TAX INTEGRITY
     stcg_equity: float
     re_taxable_gain: float
     re_distress_pct: float
@@ -99,24 +86,24 @@ async def process_flat_premium_math(data: VaultFlatPayload, token_payload: dict 
     Unblends commodities from fixed properties, patches early termination bugs, and binds slider yields.
     """
     is_panic = data.panic_toggle
-    active_inflow = 0.0 if is_panic else (data.inc_salary + data.inc_business + data.inc_consulting)
-    total_inflow = active_inflow + data.inc_rental
+    active_inflow = 0.0 if is_panic else data.total_active_inflows
+    total_inflow = active_inflow + data.total_passive_inflows
 
     # SIMPLIFIED THE BASELINE MONTHLY TOTAL RUNNING VALUE USING THE AGREED VARIABLES
     raw_monthly_burn = data.total_fixed_bank_emis + data.total_inflating_lifestyle_costs
 
-    raw_annual_spikes = (data.ann_insurance + data.ann_school_fees + data.ann_festivals + 
-                         data.ann_maintenance + data.ann_vacations)
+    # UNPACKED THE CONSOLIDATED SYSTEM SPIKES
+    raw_annual_spikes = data.total_annual_spikes
 
-    # Core Asset Allocation Structuring
-    equity_base = data.ast_demat + data.ast_mf_eq + data.ast_pe
-    debt_base = data.ast_fd + data.ast_mf_debt + data.ast_bonds + data.ast_nps
-    cash_base = data.ast_cash
-    metals_base = data.ast_gold_digi + data.ast_gold_phys
-    real_estate_base = data.ast_re_primary + data.ast_re_second
+    # Unpacking System Macro Allocation Structures
+    equity_base = data.total_equity_base
+    debt_base = data.total_debt_base
+    cash_base = data.total_cash_base
+    metals_base = data.total_metals_base
+    real_estate_base = data.total_real_estate_base
 
-    home_loan_base = data.lia_home_primary + data.lia_home_second
-    other_loan_base = data.lia_auto + data.lia_personal + data.lia_education + data.lia_cc + data.lia_other
+    home_loan_base = data.total_mortgage_debts
+    other_loan_base = data.total_other_debts
     total_debts = home_loan_base + other_loan_base
 
     absolute_expense_shock = raw_monthly_burn * (data.expense_shock / 100)
@@ -152,7 +139,7 @@ async def process_flat_premium_math(data: VaultFlatPayload, token_payload: dict 
     
     active_simulated_rent = int(round((real_estate_base * 0.03) / 12)) if data.re_liquidation > 0 else 0
     loop_simulated_rent = data.simulated_monthly_rent if data.simulated_monthly_rent > 0 else active_simulated_rent
-    current_rental_yield = data.inc_rental
+    current_rental_yield = data.total_passive_inflows
 
     # Assign dynamic cockpit returns and tax drags
     eq_growth_fraction = data.expected_equity_yield / 100
