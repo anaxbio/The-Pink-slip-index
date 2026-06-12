@@ -19,16 +19,9 @@ class VaultFlatPayload(BaseModel):
     inc_consulting: float
     inc_rental: float
 
-    exp_rent_emi: float
-    exp_other_emi: float
-    exp_food_kirana: float
-    exp_utilities: float
-    exp_domestic_help: float
-    exp_fuel_commute: float
-    exp_dining_out: float
-    exp_other_1: float
-    exp_other_2: float
-    exp_misc_buffer: float
+    # EXCHANGED THE 10 DETAILED EXPENSE DEFINITIONS FOR THE 2 AGREED INTERNAL SUM VARIABLES
+    total_fixed_bank_emis: float
+    total_inflating_lifestyle_costs: float
 
     ann_insurance: float
     ann_school_fees: float
@@ -109,9 +102,8 @@ async def process_flat_premium_math(data: VaultFlatPayload, token_payload: dict 
     active_inflow = 0.0 if is_panic else (data.inc_salary + data.inc_business + data.inc_consulting)
     total_inflow = active_inflow + data.inc_rental
 
-    raw_monthly_burn = (data.exp_rent_emi + data.exp_other_emi + data.exp_food_kirana + 
-                        data.exp_utilities + data.exp_domestic_help + data.exp_fuel_commute + 
-                        data.exp_dining_out + data.exp_other_1 + data.exp_other_2 + data.exp_misc_buffer)
+    # SIMPLIFIED THE BASELINE MONTHLY TOTAL RUNNING VALUE USING THE AGREED VARIABLES
+    raw_monthly_burn = data.total_fixed_bank_emis + data.total_inflating_lifestyle_costs
 
     raw_annual_spikes = (data.ann_insurance + data.ann_school_fees + data.ann_festivals + 
                          data.ann_maintenance + data.ann_vacations)
@@ -189,7 +181,8 @@ async def process_flat_premium_math(data: VaultFlatPayload, token_payload: dict 
             current_rental_yield *= 0.98
         real_time_inflow = active_career_inflow + (0.0 if is_panic else current_rental_yield)
 
-        running_monthly_burn = (timeline_burn_rate - (data.exp_rent_emi + data.exp_other_emi)) + loop_simulated_rent
+        # REPLACED OLD COMPLEX EQUATION WITH AGREED SUBTRACTION RULE TO SHIELD CONTRACT EMIs FROM INFLATION
+        running_monthly_burn = (timeline_burn_rate - data.total_fixed_bank_emis) + loop_simulated_rent
         monthly_deficit = running_monthly_burn - real_time_inflow
 
         if monthly_deficit > 0:
@@ -199,18 +192,21 @@ async def process_flat_premium_math(data: VaultFlatPayload, token_payload: dict 
             else:
                 short = monthly_deficit - sim_db
                 sim_db = 0
+                
                 # Cascading Attrition Rule 2: Liquify Equities
                 if sim_eq >= short:
                     sim_eq -= short
                 else:
                     short = short - sim_eq
                     sim_eq = 0
+                    
                     # Cascading Attrition Rule 3: Liquidate Precious Metals / Commodities
                     if sim_hd_met >= short:
                         sim_hd_met -= short
                     else:
                         short = short - sim_hd_met
                         sim_hd_met = 0
+                        
                         # Cascading Attrition Rule 4: Deplete Fixed Property Values
                         if sim_hd_re >= short:
                             sim_hd_re -= short
