@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pink Slip Index | Restructuring Stress Workbench</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #FAFAFA;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --accent-safe: #10B981;
+            --accent-danger: #EF4444;
+            --accent-primary: #2563EB;
+            --neon-green: #00E676;
+            --neon-red: #FF003C;
+        }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 20px; margin: 0; -webkit-font-smoothing: antialiased; }
+        .container { display: flex; width: 95%; max-width: 2400px; margin: auto; gap: 40px; position: relative; }
+        
+        .sidebar, .control-bar, .locked-engine-panel, .central-matrix-grid, .thermometer-container {
+            border: 2px solid transparent;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .highlighted-focus-ring { border-color: var(--accent-primary) !important; box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.15) !important; }
+        .highlighted-focus-ring-danger { border-color: var(--neon-red) !important; box-shadow: 0 0 0 6px rgba(255, 0, 60, 0.15) !important; }
+
+        .flow-step-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; line-height: 1.4; color: var(--text-muted); font-weight: 500; cursor: pointer; padding: 12px; border-radius: 8px; border: 2px solid transparent; transition: all 0.2s ease; position: relative; }
+        .flow-step-item:hover { background: #F1F5F9; border-color: var(--border-color); }
+        .flow-step-item.active-step { background: #EFF6FF; border-color: #BFDBFE; color: var(--text-main); font-weight: 600; }
+        
+        .pointer-hand-bubble { position: absolute; top: -35px; left: 15px; background: var(--accent-primary); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); animation: pointerMiterFloat 1s infinite alternate; z-index: 50; }
+        .pointer-hand-bubble::after { content: ''; position: absolute; bottom: -4px; left: 15px; width: 8px; height: 8px; background: var(--accent-primary); transform: rotate(45deg); }
+        .flow-step-item:nth-child(3) .pointer-hand-bubble { background: var(--neon-red); box-shadow: 0 4px 10px rgba(255, 0, 60, 0.3); }
+        .flow-step-item:nth-child(3) .pointer-hand-bubble::after { background: var(--neon-red); }
+        @keyframes pointerMiterFloat { 0% { transform: translateY(0); } 100% { transform: translateY(-5px); } }
+
+        .sidebar { width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; border-radius: 14px; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
+        .sidebar-cashflow-badge { background: #F0FDF4; border: 2px solid #BBF7D0; color: #166534; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: center; }
+        .cashflow-badge-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; font-weight: 700; }
+        .sidebar-cashflow-badge.deficit-flash { background: #FEF2F2 !important; border-color: #FECACA !important; color: #991B1B !important; }
+        .cashflow-value-display { font-size: 1.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.02em; }
+        .age-sidebar-anchor { background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; }
+        .age-sidebar-anchor label { margin-top: 0; color: var(--text-main); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .age-sidebar-anchor input { background: #FAFAFA; border: 1px solid var(--border-color); margin-top: 8px; font-size: 1.1rem; text-align: center; font-family: 'JetBrains Mono'; font-weight: 700; }
+        .drawer-nav-container { display: flex; flex-direction: column; gap: 8px; }
+        .drawer-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); width: 100%; text-align: left; padding: 14px 16px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-radius: 8px; font-weight: 600; }
+        .drawer-btn.active { color: var(--accent-primary); border-color: #BFDBFE; background: #EFF6FF; }
+        .drawer-btn:hover:not(.active) { background: #F1F5F9; color: var(--text-main); }
+        .drawer { display: none; padding-top: 10px; }
+        .drawer.active { display: block; }
+        
+        .input-group { padding: 20px; border-radius: 12px; margin-bottom: 20px; background: var(--bg-card); border: 1px solid var(--border-color); }
+        .input-group h3 { margin-top: 0; padding-bottom: 12px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0; color: var(--text-main); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; }
+        .expense-grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+        input[type="number"], input[type="range"] { width: 100%; padding: 10px; background: #FAFAFA; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; box-sizing: border-box; font-size: 1rem; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; font-weight: 500; }
+        input:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); background: #FFFFFF; }
+        .running-total-box { background: #F8FAFC; border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        
+        .header-split-wrapper { display: flex; flex-direction: column; gap: 16px; margin-bottom: 25px; background: var(--bg-card); padding: 20px 25px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .header-branding-pane { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .main-title-block { display: flex; flex-direction: column; gap: 4px; }
+        .main-title-block h1 { font-size: 2.2rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.04em; margin: 0; line-height: 1.1; }
+        .main-title-block h1 span { color: var(--text-muted); font-weight: 500; font-size: 1.6rem; }
+        .main-title-block p { margin: 0; font-size: 1.05rem; color: var(--accent-danger); font-weight: 700; letter-spacing: -0.01em; }
+        
+        .site-flow-step-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 4px; }
+        .flow-step-num { background: #F1F5F9; color: var(--text-main); font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.8rem; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color); }
+        .flow-step-item strong { color: var(--text-main); font-weight: 700; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.02em; }
+
+        .locked-engine-panel { padding: 25px; border-radius: 12px; background: #FAF9F6; border: 1px solid #E2DED0; margin-top: 20px; scroll-margin-top: 30px; }
+        .locked-engine-header { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-main); border-bottom: 2px solid #CBD5E1; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .stress-testers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+        .stress-tester-column { display: flex; flex-direction: column; gap: 18px; padding: 0 25px; box-sizing: border-box; }
+        .stress-tester-column:first-child { padding-left: 0; }
+        .stress-tester-column:last-child { padding-right: 0; }
+        .stress-tester-column:not(:last-child) { border-right: 1px solid #CBD5E1; }
+        .stress-tester-column h4 { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px dashed #CBD5E1; padding-bottom: 8px; margin-bottom: 4px; }
+        
+        .smart-lever-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; width: 100%; min-height: 38px; }
+        .smart-lever-row label { margin: 0; width: 140px; flex-shrink: 0; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.02em; line-height: 1.2; }
+        .smart-slider-wrapper { flex-grow: 1; display: flex; align-items: center; }
+        .smart-lever-badge { background: #0F172A; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; min-width: 42px; text-align: center; box-sizing: border-box; flex-shrink: 0; margin-left: 10px; }
+
+        .locked-track-container { position: relative; display: flex; align-items: center; width: 100%; }
+        .locked-stub-slider { width: 100%; height: 6px; background: #E2E8F0; border-radius: 999px; position: relative; }
+        .locked-stub-fill { height: 100%; background: #94A3B8; border-radius: 999px; }
+        .locked-stub-thumb { width: 14px; height: 14px; background: #64748B; border-radius: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 7px; color: white; font-weight: 900; }
+
+        .pink-slip-notice-memo { background: #FFE4E6; border: 2px dashed #F43F5E; border-radius: 8px; padding: 20px; box-sizing: border-box; height: 100%; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; text-align: center; box-shadow: inset 0 0 20px rgba(244, 63, 94, 0.05); }
+        .pink-slip-notice-memo-header { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 800; color: #9F1239; letter-spacing: -0.01em; margin-bottom: 12px; border-bottom: 1px solid #FDA4AF; padding-bottom: 8px; text-transform: uppercase; }
+        .pink-slip-memo-body { font-size: 1rem; font-weight: 800; color: #4C0519; margin: auto 0; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.4; }
+        .btn-pinkslip-trigger { background: #E11D48; color: #FFFFFF; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 800; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; width: 100%; margin-top: 15px; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.25); border: 1px solid #BE123C; }
+
+        .premium-friction-floor-strip { margin-top: 25px; border-top: 2px solid #CBD5E1; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .friction-floor-title { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .friction-floor-tranches { display: flex; gap: 15px; width: 100%; }
+        .friction-floor-badge-item { background: #FFFFFF; border: 1px solid #E2DED0; border-radius: 6px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-grow: 1; }
+        .friction-floor-badge-item strong { color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+        .main { flex-grow: 1; min-width: 0; padding-top: 10px; }
+        .control-bar { display: flex; align-items: center; gap: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; margin-top: 10px; border-radius: 12px; padding: 12px; }
+        .control-bar h2 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; text-transform: uppercase; }
+        .preset-pill-strip { display: flex; gap: 10px; align-items: center; flex-grow: 1; }
+        .preset-pill-btn { background: var(--bg-card); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: 600; color: var(--text-main); transition: all 0.15s ease; cursor: pointer; }
+        .preset-pill-btn:hover { border-color: #CBD5E1; background: #F8FAFC; }
+        .preset-pill-btn.active { background: #2563EB; border-color: #2563EB; color: #FFFFFF; }
+        .output-header { margin-top: 30px; font-size: 1.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 💎 RE-ARCHITECTED PRESET 3-COLUMN LAYOUT MATRIX STYLE */
+        .unified-3block-scoreboard-row { display: grid; grid-template-columns: 30fr 35fr 35fr; gap: 25px; margin-bottom: 30px; align-items: stretch; }
+        .scoreboard-card { background: var(--bg-card); padding: 24px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; box-sizing: border-box; justify-content: flex-start; position: relative; overflow: hidden; }
+        .scoreboard-card-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
+        
+        /* VAULT DIAL GAUGE RECOVERY COMPONENT LAYOUTS */
+        .gauge-dial-viewbox-wrapper { position: relative; width: 100%; max-width: 200px; margin: 0 auto; display: flex; justify-content: center; align-items: center; min-height: 110px; }
+        .gauge-svg-element { width: 100%; height: auto; overflow: visible; }
+        .gauge-track-background { fill: none; stroke: #F1F5F9; stroke-width: 14; stroke-linecap: round; transition: stroke 0.25s ease; }
+        .gauge-fill-path-green { fill: none; stroke: var(--neon-green); stroke-width: 14; stroke-linecap: round; transition: stroke-dasharray 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gauge-fill-path-red { fill: none; stroke: var(--neon-red); stroke-width: 14; stroke-linecap: round; transition: stroke-dasharray 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gauge-needle-indicator { fill: var(--text-main); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: 100px 100px; }
+        .gauge-center-cap { fill: var(--text-main); }
+        .gauge-axis-label-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; fill: var(--text-muted); }
+        .gauge-digital-readout-center { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; color: var(--text-main); text-align: center; margin-top: -10px; z-index: 5; letter-spacing: -0.02em; }
+
+        .shake-shock { animation: shockWaveRecoil 0.25s ease-in-out; }
+        .celebrate-glow { animation: emeraldGlowBurst 0.4s ease-in-out; }
+        @keyframes shockWaveRecoil {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(2px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes emeraldGlowBurst {
+            0% { box-shadow: 0 0 0 0px rgba(0, 230, 118, 0.6); }
+            100% { box-shadow: 0 0 0 20px rgba(0, 230, 118, 0); }
+        }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: transparent; height: auto; }
+        th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+        th { text-align: right; color: var(--text-muted); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; background: #F8FAFC; padding: 6px 10px; }
+        th:first-child, td:first-child { text-align: left; }
+        td { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
+        td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.85rem; }
+        tr:last-child td { border-bottom: none; }
+        
+        .lower-optimization-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .opt-card { background: var(--bg-card); padding: 24px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); display: flex; flex-direction: column; }
+        .opt-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        .velocity-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1F5F9; font-size: 0.95rem; }
+        .velocity-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .velocity-label { font-weight: 600; color: var(--text-main); }
+        .velocity-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-safe); }
+
+        .pro-badge { display: inline-flex; align-items: center; background: linear-gradient(135deg, #2563EB, #1E40AF); color: #FFFFFF !important; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; margin-left: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+        .disabled-section { cursor: pointer; transition: all 0.2s; position: relative; border-radius: 14px; }
+        .disabled-section:hover { border-color: var(--accent-primary) !important; background: #FAF9F6; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 4, 7, 0.95); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-content { background: #0D0F14; border: 1px solid #1E293B; border-radius: 16px; padding: 40px; width: 90%; max-width: 650px; color: #F1F5F9; position: relative; text-align: left; }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; color: #64748B; cursor: pointer; padding: 5px; }
+        .modal-close:hover { color: #EF4444; }
+        
+        .damage-summary-box { background: #1A1214; border-left: 4px solid #FF003C; padding: 18px; border-radius: 4px; margin-bottom: 25px; }
+        .damage-metric-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #334155; font-size: 0.95rem; }
+        .damage-rebalance-box { background: #111827; border: 1px solid #1E293B; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center; }
+        
+        .reset-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter'; }
+        .reset-btn:hover { background: #FAFAFA; border-color: #CBD5E1; }
+        .sidebar-word-display { font-size: 0.75rem; color: var(--accent-primary); font-weight: 600; display: block; margin-top: 4px; text-transform: none; letter-spacing: 0; }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div class="container">
+            <div class="sidebar" id="onboard_sidebar_block">
+                <div class="sidebar-header">
+                    <h2>🛡️ Networth Vault</h2>
+                    <button class="reset-btn" onclick="window.location.href='index.html'">🔙 Edit Base</button>
+                </div>
+                <div class="age-sidebar-anchor">
+                    <label>⚡ Current Age Baseline</label>
+                    <input type="number" id="current_age" value="45">
+                </div>
+                <div class="sidebar-cashflow-badge" id="cashflow_box">
+                    <span class="cashflow-badge-label" id="cashflow_label">Net Cash Flow</span>
+                    <span class="cashflow-value-display" id="lbl_net_cashflow">₹0</span>
+                </div>
+                <div class="drawer-nav-container">
+                    <button class="drawer-btn active" id="nav-costs">📉 Your Current Cost</button>
+                    <button class="drawer-btn" id="nav-income">💸 Your Income</button>
+                    <button class="drawer-btn" id="nav-money">💰 Your Assets</button>
+                    <button class="drawer-btn" id="nav-loans">⚠️ Your Liabilities</button>
+                </div>
+                <div id="drawer-costs" class="drawer active">
+                    <div class="running-total-box"><span>Monthly Burn:</span><span>₹<span id="lbl_total_monthly_burn">0</span></span></div>
+                    <div class="input-group">
+                        <h3 class="accordion-toggle" onclick="toggleAccordion(this)">Standard Monthly Costs <span>▲</span></h3>
+                        <div class="group-content active">
+                            <div class="expense-grid-layout">
+                                <div><label>Rent / Home EMI (₹)</label><input type="number" id="exp_rent_emi" value="32000"><span id="lbl_word_exp_rent_emi" class="sidebar-word-display"></span></div>
+                                <div><label>Other EMIs (₹)</label><input type="number" id="exp_other_emi" value="8000"><span id="lbl_word_exp_other_emi" class="sidebar-word-display"></span></div>
+                                <div><label>Food & Kirana (₹)</label><input type="number" id="exp_food_kirana" value="16000"><span id="lbl_word_exp_food_kirana" class="sidebar-word-display"></span></div>
+                                <div><label>Utilities & Bills (₹)</label><input type="number" id="exp_utilities" value="24000"><span id="lbl_word_exp_utilities" class="sidebar-word-display"></span></div>
+                                <div><label>Domestic Help (₹)</label><input type="number" id="exp_domestic_help" value="4000"><span id="lbl_word_exp_domestic_help" class="sidebar-word-display"></span></div>
+                                <div><label>Fuel & Commute (₹)</label><input type="number" id="exp_fuel_commute" value="7200"><span id="lbl_word_exp_fuel_commute" class="sidebar-word-display"></span></div>
+                                <div><label>Dining Out (₹)</label><input type="number" id="exp_dining_out" value="4800"><span id="lbl_word_exp_dining_out" class="sidebar-word-display"></span></div>
+                                <div><label>Other Exp (₹)</label><input type="number" id="exp_misc_buffer" value="3200" style="background:#FFFBEB; font-weight:700;"><span id="lbl_word_exp_misc_buffer" class="sidebar-word-display"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="drawer-income" class="drawer">
+                    <div class="input-group">
+                        <h3>Active Cash Flow</h3>
+                        <div class="expense-grid-layout">
+                            <div style="grid-column: span 2;"><label>Take Home Monthly Salary (₹)</label><input type="number" id="inc_salary" value="150000"><span id="lbl_word_inc_salary" class="sidebar-word-display"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="drawer-money" class="drawer">
+                    <div class="running-total-box"><span>Total Assets:</span><span>₹<span id="lbl_total_assets">0</span></span></div>
+                    <div class="input-group">
+                        <h3>Your Asset Break Up</h3>
+                        <div class="expense-grid-layout">
+                            <div style="grid-column: span 2;"><label>Equity - MF+Direct (₹)</label><input type="number" id="ast_demat" value="3750000"><span id="lbl_word_ast_demat" class="sidebar-word-display"></span></div>
+                            <div style="grid-column: span 2;"><label>FD+Debt MF (₹)</label><input type="number" id="ast_fd" value="3000000"><span id="lbl_word_ast_fd" class="sidebar-word-display"></span></div>
+                            <div style="grid-column: span 2;"><label>Savings / Cash (₹)</label><input type="number" id="ast_cash" value="750000"><span id="lbl_word_ast_cash" class="sidebar-word-display"></span></div>
+                            <div style="grid-column: span 2;"><label>Real Estate (₹)</label><input type="number" id="ast_re" value="0"><span id="lbl_word_ast_re" class="sidebar-word-display"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="drawer-loans" class="drawer">
+                    <div class="input-group">
+                        <h3>Outstanding Debt</h3>
+                        <div class="expense-grid-layout">
+                            <div style="grid-column: span 2;"><label>Home Loan (₹)</label><input type="number" id="lia_home" value="400000"><span id="lbl_word_lia_home" class="sidebar-word-display"></span></div>
+                            <div style="grid-column: span 2;"><label>Other Loans (₹)</label><input type="number" id="lia_other" value="100000"><span id="lbl_word_lia_other" class="sidebar-word-display"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main">
+                <div class="header-split-wrapper">
+                    <div class="header-branding-pane">
+                        <div class="main-title-block">
+                            <h1>The Pink Slip Index <span>[Pro Workbench]</span></h1>
+                            <p>ARE YOU ACTUALLY READY FOR RESTRUCTURING? LET'S FIND OUT.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="site-flow-step-strip">
+                        <div class="flow-step-item" id="step_trigger_1" onclick="triggerStepFocus(1)">
+                            <div class="pointer-hand-bubble" id="hand_pointer_1">👉 CLICK THIS</div>
+                            <div class="flow-step-num">1</div>
+                            <div>
+                                <strong>1. Map Your Money</strong>
+                                Check the left side to insert actual monthly expenses and actual fund /loans figures
+                            </div>
+                        </div>
+                        <div class="flow-step-item" id="step_trigger_2" onclick="triggerStepFocus(2)">
+                            <div class="pointer-hand-bubble" id="hand_pointer_2" style="display:none;">👉 CLICK THIS</div>
+                            <div class="flow-step-num">2</div>
+                            <div>
+                                <strong>2. Sim a Market Crash</strong>
+                                what if 2008 market crash or covid happens again, how will your numbers change , choose a button and see your numbers change, reset the number as many times as you want
+                            </div>
+                        </div>
+                        <div class="flow-step-item" id="step_trigger_3" onclick="triggerStepFocus(3)">
+                            <div class="pointer-hand-bubble" id="hand_pointer_3" style="display:none;">👉 CLICK THIS</div>
+                            <div class="flow-step-num">3</div>
+                            <div>
+                                <strong>3. Run the Real Test</strong>
+                                Check every possible event which impacts your money. Use the Pro engine below to simulate immediate job loss, custom portfolio drawdowns, inflation shocks, and hidden exit costs to see exactly where your family safety breaks.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-bar" id="onboard_scenarios_block">
+                    <h2>🚨 Free Scenarios</h2>
+                    <div class="preset-pill-strip" id="free-presets-strip">
+                        <button class="preset-pill-btn" onclick="applyHistoricalScenario('mehta', this)">📉 1992 Crash</button>
+                        <button class="preset-pill-btn" onclick="applyHistoricalScenario('lehman', this)">☣️ 2008 Contagion</button>
+                        <button class="preset-pill-btn" onclick="applyHistoricalScenario('covid', this)">... 2020 Black Swan</button>
+                        <button class="preset-pill-btn" onclick="applyHistoricalScenario('iran', this)">🦅 Iran War Shock</button>
+                    </div>
+                    <button class="reset-btn" id="btn-reset-sliders">🔄 Reset Index</button>
+                </div>
+                
+                <div class="unified-3block-scoreboard-row" id="thermometer_block">
+                    <div class="scoreboard-card" id="card_runway">
+                        <div class="scoreboard-card-title">📉 Capital Runway Timeline</div>
+                        <div style="margin: auto 0; display:flex; flex-direction:column; gap:8px;">
+                            <div style="font-size: 2.3rem; font-weight: 800; font-family:'JetBrains Mono'; color: var(--accent-safe); line-height:1.1;" id="val_months">0</div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);" id="val_years">(0.0 Yrs)</div>
+                            <div style="width: 100%; background: #E2E8F0; height: 6px; border-radius: 999px; margin-top: 8px; overflow: hidden; border: 1px solid #CBD5E1;">
+                                <div id="bar_psi_fill" style="height: 100%; width: 0%; background-color: var(--accent-primary); transition: width 0.2s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="scoreboard-card" style="align-items:center;" id="card_gauge">
+                        <div class="scoreboard-card-title" style="width:100%;">🎯 Pink Slip Index Gauge</div>
+                        <div class="gauge-dial-viewbox-wrapper">
+                            <svg class="gauge-svg-element" viewBox="0 0 200 200">
+                                <path class="gauge-track-background" d="M 30,140 A 80,80 0 1,1 170,140" />
+                                <path id="gauge_green_fill" class="gauge-fill-path-green" d="M 30,140 A 80,80 0 1,1 170,140" stroke-dasharray="0 400" />
+                                <path id="gauge_red_fill" class="gauge-fill-path-red" d="M 30,140 A 80,80 0 1,1 170,140" stroke-dasharray="0 400" style="display:none;" />
+                                <text class="gauge-axis-label-text" x="20" y="162">0</text>
+                                <text class="gauge-axis-label-text" x="90" y="32">50</text>
+                                <text class="gauge-axis-label-text" x="162" y="162">100</text>
+                                <g id="gauge_needle_pin" class="gauge-needle-indicator">
+                                    <polygon points="100,105 96,100 100,20 104,100" />
+                                    <circle class="gauge-center-cap" cx="100" cy="100" r="8" />
+                                </g>
+                            </svg>
+                        </div>
+                        <div class="gauge-digital-readout-center" id="lbl_green_score">0</div>
+                        <div id="lbl_red_gap" style="display:none;"></div>
+                        <div id="thermometer_track" style="display:none;"><div id="thermometer_green"></div><div id="thermometer_red"></div></div>
+                    </div>
+                    
+                    <div class="scoreboard-card" style="padding:0; overflow:hidden; justify-content:stretch;" id="card_table">
+                        <div class="scoreboard-card-title" style="margin: 16px 20px 8px 20px; border:none; padding:0;">🔄 Networth Vault Matrix Table</div>
+                        <div style="flex-grow:1; overflow-y:auto;">
+                            <table>
+                                <thead>
+                                    <tr id="table_head">
+                                        <th>Asset Break Up</th>
+                                        <th>Baseline</th>
+                                        <th>Crisis Drift</th>
+                                        <th>Survival Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vault_table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="output-header">
+                    <span>🔥 Pink slip Indicators</span>
+                </div>
+                
+                <div class="lower-optimization-grid">
+                    <div class="opt-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div class="opt-title">🗺️ Financial Navigation Map</div>
+                            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 5px; margin-bottom: 15px;">
+                                <div class="velocity-row" style="border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">
+                                    <span style="color: var(--text-muted); font-weight: 500;">🏁 Destination:</span>
+                                    <span style="font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.02em;">Fuck your payslip</span>
+                                </div>
+                                <div class="velocity-row" style="border-bottom: 1px solid #F1F5F9; padding: 8px 0;">
+                                    <span style="color: var(--text-muted); font-weight: 500;">▶ Total Route Distance:</span>
+                                    <span id="lbl_nav_route" style="font-family: 'JetBrains Mono'; font-weight: 700; color: var(--text-main);">₹0</span>
+                                </div>
+                                <div class="velocity-row" style="padding-top: 8px; border-bottom: none;">
+                                    <span style="color: var(--text-muted); font-weight: 500;">▶ Remaining Distance:</span>
+                                    <span id="lbl_nav_remain" style="font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent-danger);">₹0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="opt-card">
+                        <div class="opt-title">📊 Portfolio Speedometer</div>
+                        <div style="margin-bottom: 5px;">
+                            <div class="velocity-row">
+                                <span class="velocity-label">Historical Current Mileage (Last 3 Years)</span>
+                                <span class="velocity-val" id="v_3yr">+0.0%</span>
+                            </div>
+                            <div class="velocity-row">
+                                <span class="velocity-label">Historical Cruising Mileage (Last 5 Years)</span>
+                                <span class="velocity-val" id="v_5yr">+0.0%</span>
+                            </div>
+                            <div class="velocity-row">
+                                <span class="velocity-label">Historical Long Drive Mileage (Last 10 Years)</span>
+                                <span class="velocity-val" id="v_10yr">+0.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="locked-engine-panel disabled-section" id="onboard_pro_deck_block" onclick="openPremiumModal()">
+                    <div class="locked-engine-header">
+                        <span>🔒 STRESS TESTERS <span class="pro-badge">PRO ENGINE</span></span>
+                        <span style="color:var(--accent-primary); font-size: 0.85rem; font-weight: 700;">🔒 CLICK TO UNLOCK CONFIGURATION DECK</span>
+                    </div>
+                    
+                    <div class="stress-testers-grid">
+                        <div class="stress-tester-column">
+                            <h4>📉 DRAWDOWN SHOCKS</h4>
+                            
+                            <div class="smart-lever-row">
+                                <label>Equity Shift</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" id="fill_eq_shift" style="width: 50%;"></div>
+                                            <div class="locked-stub-thumb" id="thumb_eq_shift" style="left: 50%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge" id="lbl_eq_shift_badge">0%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Gold Shift</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" id="fill_met_shift" style="width: 50%;"></div>
+                                            <div class="locked-stub-thumb" id="thumb_met_shift" style="left: 50%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge" id="lbl_met_shift_badge">0%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Expense Shock</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" id="fill_exp_shock" style="width: 0%;"></div>
+                                            <div class="locked-stub-thumb" id="thumb_exp_shock" style="left: 0%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge" id="lbl_exp_shock_badge">0%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Liquidate Home</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" style="width: 0%;"></div>
+                                            <div class="locked-stub-thumb" style="left: 0%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge" style="background:#64748B;">🏡</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stress-tester-column">
+                            <h4>🏦 RETURN SHOCKS</h4>
+                            
+                            <div class="smart-lever-row">
+                                <label>Inflation Stress</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" id="fill_inflation" style="width: 30%;"></div>
+                                            <div class="locked-stub-thumb" id="thumb_inflation" style="left: 30%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge" id="lbl_inflation_badge_val">6%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Expected Equity</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" style="width: 60%;"></div>
+                                            <div class="locked-stub-thumb" style="left: 60%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge">12%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Fixed Income</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" style="width: 30%;"></div>
+                                            <div class="locked-stub-thumb" style="left: 30%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge">6%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Commodity Yield</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" style="width: 40%;"></div>
+                                            <div class="locked-stub-thumb" style="left: 40%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge">8%</span>
+                            </div>
+
+                            <div class="smart-lever-row">
+                                <label>Portfolio Tax Drag</label>
+                                <div class="smart-slider-wrapper">
+                                    <div class="locked-track-container">
+                                        <div class="locked-stub-slider">
+                                            <div class="locked-stub-fill" style="width: 0%;"></div>
+                                            <div class="locked-stub-thumb" style="left: 0%;">🔒</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="smart-lever-badge" style="background:var(--accent-danger);">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stress-tester-column">
+                            <h4>🛑 TERMINATION NOTICE</h4>
+                            <div class="pink-slip-notice-memo">
+                                <div class="pink-slip-notice-memo-header">⚠️ HR NOTICE</div>
+                                <div class="pink-slip-memo-body">YOU ARE FIRED.</div>
+                                <button class="btn-pinkslip-trigger" disabled>🔥 Test Pink Slip Readiness</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="premium-friction-floor-strip">
+                        <div class="friction-floor-title">💸 HIDDEN EXIT COSTS: -₹4,520,000</div>
+                        <div class="friction-floor-tranches">
+                            <div class="friction-floor-badge-item">📉 Market Haircuts: <strong>₹1,250,000</strong></div>
+                            <div class="friction-floor-badge-item">🏡 Real Estate Toll: <strong>₹2,800,000</strong></div>
+                            <div class="friction-floor-badge-item">🪙 Fixed Income Penalties: <strong>₹470,000</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="equity_shift" value="0">
+                <input type="hidden" id="metals_shift" value="0">
+                <input type="hidden" id="expense_shock" value="0">
+                <input type="hidden" id="inflation_slider" value="6">
+            </div>
+        </div>
+    </div>
+
+    <div id="premium_modal" class="modal-overlay" onclick="if(event.target === this) closePremiumModal()">
+        <div class="modal-content" style="max-width:500px; text-align:center;">
+            <button class="modal-close" onclick="closePremiumModal()">✖</button>
+            <h2 style="margin-top: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em;">🛡️ Premium Vault Access</h2>
+            <p style="color: #94A3B8; line-height: 1.6; margin-bottom: 25px; font-size: 1rem;">This metric is restricted to Premium accounts. Upgrade to unlock historical macro simulation layers, inflation feedback loops, automated tax-loss balance evaluations, and direct real-estate tranche sequencing audits.</p>
+            <div style="background: #1E293B; border: 1px solid #334155; padding: 20px; border-radius: 12px; text-align: left; margin-bottom: 20px;">
+                <label style="color: #F8FAFC; font-weight: 700; font-size: 0.9rem; display: block; margin-bottom: 8px; text-transform:none; letter-spacing:0;">Email Address for Access Link</label>
+                <input type="email" id="checkout_email" placeholder="you@domain.com" style="width: 100%; padding: 12px; background: #0F172A; border: 1px solid #475569; color: white; border-radius: 6px; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+            </div>
+            <button id="btn_dummy_checkout" style="background: #2563EB; color: white; padding: 14px 30px; font-size: 1.05rem; border-radius: 8px; width: 100%; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 12px rgba(37,99,235,0.4);">Secure Checkout via Razorpay</button>
+            <div id="checkout_status" style="margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; display: none;"></div>
+        </div>
+    </div>
+
+    <div id="damage_modal" class="modal-overlay" onclick="if(event.target === this) closeDamageReportModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDamageReportModal()">✖</button>
+            <h2 style="margin-top: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color:#FF003C;">🚨 SYSTEMIC EXPOSURE DIAGNOSTIC AUDIT</h2>
+            
+            <div class="damage-summary-box">
+                <p style="margin:0; color:#F8FAFC; line-height:1.6; font-size:1rem;">
+                    Your active index metrics reveal a structural funding deficit across your capital lifespan timeline. Under standard parameters, your liquid reserves experience an aggressive drawdown inflection trend, accelerating your portfolio exhaustion window.
+                </p>
+            </div>
+
+            <h3 style="font-size:1rem; text-transform:uppercase; letter-spacing:0.05em; color:#94A3B8; margin-bottom:10px;">Asset Allocation Friction Tranches</h3>
+            <div style="background:#111827; padding:5px 20px; border-radius:8px; border:1px solid #1E293B; margin-bottom:25px;">
+                <div class="damage-metric-row">
+                    <span>Equity Allocation Mix:</span>
+                    <div><span id="dmg_base_eq" style="color:#ffffff; font-weight:700;">0%</span> &rarr; Crisis Target Value: <span id="dmg_surv_eq" style="color:var(--neon-green); font-weight:700;">₹0</span></div>
+                </div>
+                <div class="damage-metric-row">
+                    <span>Fixed Income / Debt Mix:</span>
+                    <div><span id="dmg_base_fd" style="color:#ffffff; font-weight:700;">0%</span> &rarr; Interest Target Value: <span id="dmg_surv_fd" style="color:var(--neon-green); font-weight:700;">₹0</span></div>
+                </div>
+                <div class="damage-metric-row">
+                    <span>Liquid Cash Reserve Cushion:</span>
+                    <div><span id="dmg_base_cs" style="color:#ffffff; font-weight:700;">0%</span> &rarr; Calculated Active Survival: <span id="dmg_surv_cs" style="color:var(--neon-green); font-weight:700;">₹0</span></div>
+                </div>
+            </div>
+
+            <h3 style="font-size:1rem; text-transform:uppercase; letter-spacing:0.05em; color:#94A3B8; margin-bottom:10px;">Target FIRE Milestone Gap Analysis</h3>
+            <div style="background:#111827; padding:5px 20px; border-radius:8px; border:1px solid #1E293B;">
+                <div class="damage-metric-row">
+                    <span>Active Net Wealth Capital Pool:</span>
+                    <span style="font-family:'JetBrains Mono'; font-weight:700; color:#10B981;" id="dmg_liquid_pool">₹0</span>
+                </div>
+                <div class="damage-metric-row">
+                    <span>Calculated Target FIRE Milestone Requirement:</span>
+                    <span style="font-family:'JetBrains Mono'; font-weight:700; color:#ffffff;" id="dmg_fire_milestone">₹0</span>
+                </div>
+                <div class="damage-metric-row">
+                    <span>Deficit Shortfall to Absolute Lifespan Security:</span>
+                    <span style="font-family:'JetBrains Mono'; font-weight:700; color:#FF003C;" id="dmg_shortfall_gap">₹0</span>
+                </div>
+            </div>
+
+            <div class="damage-rebalance-box">
+                <p style="margin:0 0 15px 0; color:#94A3B8; font-size:0.95rem; line-height:1.5;">
+                    Testing Mode Active: All calculated asset allocation variables, target requirements, and structural shortfalls are unredacted for review.
+                </p>
+                <p style="margin:0 0 15px 0; color:#94A3B8; font-size:0.95rem; line-height:1.5;">
+                    Testing Mode Active: All calculated asset allocation variables, target requirements, and structural shortfalls are unredacted for review.
+                </p>
+                <button onclick="transitionDamageToCheckout()" style="background:linear-gradient(135deg, #2563EB, #1E40AF); color:white; font-weight:700; border:none; padding:14px 28px; border-radius:6px; cursor:pointer; text-transform:uppercase; letter-spacing:0.05em; font-size:0.95rem; box-shadow:0 4px 14px rgba(37,99,235,0.3);">
+                    🔒 Proceed to Premium Verification
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const storageKey = 'pinkslip_funnel_state';
+        const fmt = (num) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(num || 0);
+
+        let previousScore = null;
+        let activeGuidedStep = 1;
+
+        function formatIndianWords(number) {
+            if (!number || number === 0) return "Zero Rupees";
+            const crores = Math.floor(number / 10000000); let remainder = number % 10000000;
+            const lakhs = Math.floor(remainder / 100000); remainder = remainder % 100000;
+            const thousands = Math.floor(remainder / 1000); const rupees = remainder % 1000;
+            let result = [];
+            if (crores > 0) result.push(`${crores} Crore${crores > 1 ? 's' : ''}`);
+            if (lakhs > 0) result.push(`${lakhs} Lakh${lakhs > 1 ? 's' : ''}`);
+            if (thousands > 0) result.push(`${thousands} Thousand`);
+            if (rupees > 0 || result.length === 0) result.push(`${rupees} Rupee${rupees > 1 || rupees === 0 ? 's' : ''}`);
+            return result.join(" ");
+        }
+
+        /* ACTIONS WALKTHROUGH CONTROLLER WITH AUTOSCROLL */
+        function triggerStepFocus(stepNumber) {
+            document.querySelectorAll('.flow-step-item').forEach(el => el.classList.remove('active-step'));
+            document.getElementById('hand_pointer_1').style.display = 'none';
+            document.getElementById('hand_pointer_2').style.display = 'none';
+            document.getElementById('hand_pointer_3').style.display = 'none';
+
+            const sidebar = document.getElementById('onboard_sidebar_block');
+            const scenarios = document.getElementById('onboard_scenarios_block');
+            const thermometer = document.getElementById('thermometer_block');
+            const proDeck = document.getElementById('onboard_pro_deck_block');
+
+            // Strip current highlight layers
+            sidebar.classList.remove('highlighted-focus-ring');
+            scenarios.classList.remove('highlighted-focus-ring');
+            thermometer.classList.remove('highlighted-focus-ring');
+            proDeck.classList.remove('highlighted-focus-ring-danger');
+
+            if (stepNumber === 1) {
+                activeGuidedStep = 1;
+                document.getElementById('step_trigger_1').classList.add('active-step');
+                document.getElementById('hand_pointer_1').style.display = 'block';
+                sidebar.classList.add('highlighted-focus-ring');
+            } 
+            else if (stepNumber === 2) {
+                activeGuidedStep = 2;
+                document.getElementById('step_trigger_2').classList.add('active-step');
+                document.getElementById('hand_pointer_2').style.display = 'block';
+                scenarios.classList.add('highlighted-focus-ring');
+                thermometer.classList.add('highlighted-focus-ring');
+            } 
+            else if (stepNumber === 3) {
+                activeGuidedStep = 3;
+                document.getElementById('step_trigger_3').classList.add('active-step');
+                document.getElementById('hand_pointer_3').style.display = 'block';
+                proDeck.classList.add('highlighted-focus-ring-danger');
+                
+                // AUTO-SCROLL DOWN FIX TO PULL HIDDEN PREMIUM BLOCK INTO USER LINE OF SIGHT
+                proDeck.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        const bindDrawer = (btnId, drawerId) => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
+                    document.querySelectorAll('.drawer-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById(drawerId).classList.add('active');
+                    e.target.classList.add('active');
+                });
+            }
+        };
+        bindDrawer('nav-costs', 'drawer-costs'); bindDrawer('nav-income', 'drawer-income'); bindDrawer('nav-money', 'drawer-money'); bindDrawer('nav-loans', 'drawer-loans');
+        
+        function toggleAccordion(el) {
+            const content = el.nextElementSibling;
+            const icon = el.querySelector('span');
+            if (content.classList.contains('active')) { content.classList.remove('active'); icon.innerText = '▼'; }
+            else { content.classList.add('active'); icon.innerText = '▲'; }
+        }
+        
+        document.getElementById('btn-reset-sliders').addEventListener('click', () => {
+            document.getElementById('equity_shift').value = 0; 
+            document.getElementById('metals_shift').value = 0; 
+            document.getElementById('expense_shock').value = 0; 
+            document.getElementById('inflation_slider').value = 6;
+            document.querySelectorAll('#free-presets-strip .preset-pill-btn').forEach(b => b.classList.remove('active'));
+            calculate();
+        });
+        
+        function openPremiumModal() { document.getElementById('premium_modal').style.display = 'flex'; }
+        function closePremiumModal() { document.getElementById('premium_modal').style.display = 'none'; document.getElementById('checkout_status').style.display = 'none'; document.getElementById('checkout_email').value = ''; }
+        
+        document.getElementById('btn_dummy_checkout').addEventListener('click', async () => {
+            const emailInput = document.getElementById('checkout_email').value.trim();
+            const statusDiv = document.getElementById('checkout_status');
+            const btn = document.getElementById('btn_dummy_checkout');
+
+            if (!emailInput || !emailInput.includes('@')) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#450a0a';
+                statusDiv.style.border = '1px solid #7f1d1d';
+                statusDiv.style.color = '#fca5a5';
+                statusDiv.innerText = "Please enter a valid email address.";
+                return;
+            }
+
+            // Lock UI during transmit
+            btn.innerText = "Initializing Gateway...";
+            btn.style.opacity = "0.7";
+            btn.style.pointerEvents = "none";
+            statusDiv.style.display = 'none';
+
+            try {
+                // 1. Securely fetch the public Key ID from router_premium.py
+                const keyRes = await fetch('https://api.pinkslipindex.com/checkout/key');
+                if (!keyRes.ok) throw new Error("Failed to retrieve gateway key.");
+                const { key_id } = await keyRes.json();
+
+                // 2. Fetch Order ID from Oracle Server
+                const orderRes = await fetch('https://api.pinkslipindex.com/checkout/create_order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customer_email: emailInput })
+                });
+                
+                if (!orderRes.ok) throw new Error("Backend connection failed.");
+                const { order_id } = await orderRes.json();
+
+                // 3. Configure Razorpay dynamically
+                const options = {
+                    "key": key_id, 
+                    "amount": 99900,
+                    "currency": "INR",
+                    "name": "Pink Slip Index",
+                    "order_id": order_id, 
+                    "handler": function (response) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#064e3b';
+                        statusDiv.style.border = '1px solid #047857';
+                        statusDiv.style.color = '#6ee7b7';
+                        statusDiv.innerText = "Payment Successful! Magic Link dispatched. Check your inbox and click the secure link to authenticate and unlock the Vault.";
+                        btn.innerText = "Link Dispatched";
+                    },
+                    "prefill": { "email": emailInput },
+                    "theme": { "color": "#2563EB" }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+                
+                rzp.on('payment.failed', function (response){
+                    btn.innerText = "Secure Checkout via Razorpay";
+                    btn.style.opacity = "1";
+                    btn.style.pointerEvents = "auto";
+                    alert("Payment failed. Please try again.");
+                });
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#450a0a';
+                statusDiv.style.border = '1px solid #7f1d1d';
+                statusDiv.style.color = '#fca5a5';
+                statusDiv.innerText = "Transaction initialization failed. Check your connection.";
+                btn.innerText = "Secure Checkout via Razorpay";
+                btn.style.opacity = "1";
+                btn.style.pointerEvents = "auto";
+            }
+        });
+
+        function openDamageReportModal() { document.getElementById('damage_modal').style.display = 'flex'; }
+        function closeDamageReportModal() { document.getElementById('damage_modal').style.display = 'none'; }
+        function transitionDamageToCheckout() { closeDamageReportModal(); openPremiumModal(); }
+
+        function applyHistoricalScenario(scenarioType, btnRef) {
+            document.querySelectorAll('#free-presets-strip .preset-pill-btn').forEach(b => b.classList.remove('active'));
+            if (btnRef) btnRef.classList.add('active');
+            
+            const eqSlider = document.getElementById('equity_shift');
+            const mtSlider = document.getElementById('metals_shift');
+            const exSlider = document.getElementById('expense_shock');
+            const infHidden = document.getElementById('inflation_slider');
+            
+            if (scenarioType === 'mehta') {
+                eqSlider.value = -55; mtSlider.value = 0; exSlider.value = 0; infHidden.value = 10;
+            } else if (scenarioType === 'lehman') {
+                eqSlider.value = -50; mtSlider.value = 45; exSlider.value = 0; infHidden.value = 6;
+            } else if (scenarioType === 'covid') {
+                eqSlider.value = -35; mtSlider.value = -5; exSlider.value = 15; infHidden.value = 6;
+            } else if (scenarioType === 'iran') {
+                eqSlider.value = -15; mtSlider.value = 25; exSlider.value = 25; infHidden.value = 8;
+            }
+            calculate();
+
+            if (activeGuidedStep === 2) {
+                setTimeout(() => { triggerStepFocus(3); }, 1200);
+            }
+        }
+
+        function updateAllWordDisplays() {
+            const inputsToWordify = [
+                'current_age', 'exp_rent_emi', 'exp_other_emi', 'exp_food_kirana', 'exp_utilities', 
+                'exp_domestic_help', 'exp_fuel_commute', 'exp_dining_out', 'exp_misc_buffer',
+                'inc_salary', 'ast_demat', 'ast_fd', 'ast_cash', 'ast_re', 'lia_home', 'lia_other'
+            ];
+            inputsToWordify.forEach(id => {
+                const el = document.getElementById(id);
+                const wordLabel = document.getElementById('lbl_word_' + id);
+                if (el && wordLabel) {
+                    wordLabel.innerText = formatIndianWords(Number(el.value));
+                }
+            });
+        }
+
+        function calculate() {
+            updateAllWordDisplays();
+            const age = Number(document.getElementById('current_age').value) || 45;
+            
+            const total_monthly_burn = (Number(document.getElementById('exp_rent_emi').value) || 0) + 
+                                       (Number(document.getElementById('exp_other_emi').value) || 0) + 
+                                       (Number(document.getElementById('exp_food_kirana').value) || 0) + 
+                                       (Number(document.getElementById('exp_utilities').value) || 0) + 
+                                       (Number(document.getElementById('exp_domestic_help').value) || 0) + 
+                                       (Number(document.getElementById('exp_fuel_commute').value) || 0) + 
+                                       (Number(document.getElementById('exp_dining_out').value) || 0) + 
+                                       (Number(document.getElementById('exp_misc_buffer').value) || 0);
+            
+            document.getElementById('lbl_total_monthly_burn').innerText = fmt(total_monthly_burn);
+            
+            const equity_base = Number(document.getElementById('ast_demat').value) || 0;
+            const debt_base = Number(document.getElementById('ast_fd').value) || 0;
+            const cash_base = Number(document.getElementById('ast_cash').value) || 0;
+            const re_base = Number(document.getElementById('ast_re').value) || 0;
+            const total_assets = equity_base + debt_base + cash_base + re_base;
+            document.getElementById('lbl_total_assets').innerText = fmt(total_assets);
+            
+            const liability_base = (Number(document.getElementById('lia_home').value) || 0) + 
+                                   (Number(document.getElementById('lia_other').value) || 0);
+            
+            const equity_shift = Number(document.getElementById('equity_shift').value) || 0;
+            const fixed_shift = Number(document.getElementById('metals_shift').value) || 0;
+            const expense_shock_pct = Number(document.getElementById('expense_shock').value) || 0;
+            const inflation_pct_val = Number(document.getElementById('inflation_slider').value) || 6;
+            
+            document.getElementById('lbl_eq_shift_badge').innerText = equity_shift + "%";
+            document.getElementById('fill_eq_shift').style.width = ((equity_shift + 70) / 120 * 100) + "%";
+            document.getElementById('thumb_eq_shift').style.left = ((equity_shift + 70) / 120 * 100) + "%";
+            
+            document.getElementById('lbl_met_shift_badge').innerText = fixed_shift + "%";
+            document.getElementById('fill_met_shift').style.width = ((fixed_shift + 50) / 100 * 100) + "%";
+            document.getElementById('thumb_met_shift').style.left = ((fixed_shift + 50) / 100 * 100) + "%";
+
+            document.getElementById('lbl_exp_shock_badge').innerText = expense_shock_pct + "%";
+            document.getElementById('fill_exp_shock').style.width = expense_shock_pct + "%";
+            document.getElementById('thumb_exp_shock').style.left = expense_shock_pct + "%";
+
+            document.getElementById('lbl_inflation_badge_val').innerText = inflation_pct_val + "%";
+            document.getElementById('fill_inflation').style.width = (inflation_pct_val * 10) + "%";
+            document.getElementById('thumb_inflation').style.left = (inflation_pct_val * 10) + "%";
+            
+            const inflow = Number(document.getElementById('inc_salary').value) || 0;
+            const runtime_burn_adjusted = total_monthly_burn * (1 + (expense_shock_pct / 100));
+            const net_cashflow = inflow - runtime_burn_adjusted;
+            
+            const cashflowBox = document.getElementById('cashflow_box');
+            const cashflowLabel = document.getElementById('cashflow_label');
+            const cashflowVal = document.getElementById('lbl_net_cashflow');
+            
+            if (net_cashflow >= 0) { 
+                cashflowBox.className = "sidebar-cashflow-badge"; cashflowLabel.innerText = "CASH FLOW SURPLUS"; cashflowVal.innerText = "+₹" + fmt(net_cashflow); 
+            } else { 
+                cashflowBox.className = "sidebar-cashflow-badge deficit-flash"; cashflowLabel.innerText = "CASH FLOW DEFICIT"; cashflowVal.innerText = "-₹" + fmt(Math.abs(net_cashflow)); 
+            }
+            
+            const shifted_equity = equity_base * (1 + (equity_shift / 100));
+            const shifted_debt = debt_base * (1 + (fixed_shift / 100));
+            
+            let survival_liquid_estate = shifted_equity + shifted_debt + cash_base;
+            let liquid_pool = Math.max(0, survival_liquid_estate - liability_base);
+            let total_starting_liquid_pool = liquid_pool;
+            let completed_months = 0;
+            let current_loop_burn = runtime_burn_adjusted;
+            const inflation_pct = inflation_pct_val / 100;
+            
+            for (let m = 1; m <= 600; m++) {
+                let real_inflow = (age + (m/12)) >= 60 ? 0 : inflow;
+                let monthly_deficit = current_loop_burn - real_inflow;
+                if (monthly_deficit > 0) { liquid_pool -= monthly_deficit; if (liquid_pool <= 0) break; }
+                else { liquid_pool += Math.abs(monthly_deficit); }
+                liquid_pool *= (1 + (0.07 / 12));
+                completed_months++;
+                if (m % 12 === 0) current_loop_burn *= (1 + inflation_pct);
+            }
+            
+            const terminalAgeTarget = 85;
+            let yearsNeededToCover = Math.max(1, terminalAgeTarget - age);
+            let calculatedYearsRunway = completed_months / 12;
+            
+            let rawPsiScore = 0;
+            if (total_starting_liquid_pool > 0) {
+                rawPsiScore = (calculatedYearsRunway / yearsNeededToCover) * 100;
+            }
+            let finalPsiScore = Math.min(100, Math.max(0, rawPsiScore));
+            
+            document.getElementById('val_months').innerText = fmt(completed_months) + " Months";
+            document.getElementById('val_years').innerText = `(${calculatedYearsRunway.toFixed(1)} Yrs Runway Capacity)`;
+            
+            const progressFill = document.getElementById('bar_psi_fill');
+            progressFill.style.width = finalPsiScore + '%';
+
+            let targetFICorpus = runtime_burn_adjusted * 12 * 30; 
+            let remainingDistanceGap = targetFICorpus - total_starting_liquid_pool;
+            
+            document.getElementById('lbl_nav_route').innerText = '₹' + fmt(targetFICorpus);
+            
+            const remainLabel = document.getElementById('lbl_nav_remain');
+            if (remainingDistanceGap > 0) {
+                remainLabel.innerText = '-₹' + fmt(remainingDistanceGap);
+                remainLabel.style.color = '#EF4444';
+            } else {
+                remainLabel.innerText = 'ARRIVED';
+                remainLabel.style.color = '#10B981';
+            }
+
+            const thermometerBlock = document.getElementById('thermometer_block');
+            const scoreReadoutLabel = document.getElementById('lbl_green_score');
+            
+            if (scoreReadoutLabel) scoreReadoutLabel.innerText = finalPsiScore.toFixed(1);
+
+            const targetRotationDegrees = -120 + (finalPsiScore * 2.4);
+            const needleSvgObject = document.getElementById('gauge_needle_pin');
+            if (needleSvgObject) needleSvgObject.style.transform = `rotate(${targetRotationDegrees}deg)`;
+
+            const totalArcStrokeLength = 502; 
+            const currentFillStrokeLength = (finalPsiScore / 100) * totalArcStrokeLength;
+            const greenPathSegment = document.getElementById('gauge_green_fill');
+            const redPathSegment = document.getElementById('gauge_red_fill');
+
+            if (greenPathSegment) {
+                greenPathSegment.style.display = 'block';
+                greenPathSegment.style.strokeDasharray = `${currentFillStrokeLength} ${totalArcStrokeLength}`;
+            }
+            
+            if (previousScore !== null && previousScore !== finalPsiScore) {
+                thermometerBlock.classList.remove('shake-shock', 'celebrate-glow');
+                void thermometerBlock.offsetWidth; 
+                
+                if (finalPsiScore < previousScore) {
+                    thermometerBlock.classList.add('shake-shock');
+                } else if (finalPsiScore >= 100.0 && previousScore < 100.0) {
+                    thermometerBlock.classList.add('celebrate-glow');
+                }
+            }
+            previousScore = finalPsiScore;
+            
+            const baselineDenominator = total_assets || 1;
+            const survivalDenominator = survival_liquid_estate || 1;
+            
+            const baseEquityPct = Math.round((equity_base / baselineDenominator) * 100);
+            const baseDebtPct = Math.round((debt_base / baselineDenominator) * 100);
+            const baseCashPct = Math.round((cash_base / baselineDenominator) * 100);
+            const baseRePct = Math.round((re_base / baselineDenominator) * 100);
+
+            const survEquityPct = Math.round((shifted_equity / survivalDenominator) * 100);
+            const survDebtPct = Math.round((shifted_debt / survivalDenominator) * 100);
+            const survCashPct = Math.round((cash_base / survivalDenominator) * 100);
+            const survRePct = Math.round((re_base / survivalDenominator) * 100);
+            
+            document.getElementById('vault_table').innerHTML = `
+                <tr><td>Equity - MF+Direct</td><td>₹${fmt(equity_base)} (${baseEquityPct}%)</td><td><span style="color:${shifted_equity - equity_base >= 0 ? '#10B981' : '#EF4444'}">${equity_shift}%</span></td><td>₹${fmt(shifted_equity)} (${survEquityPct}%)</td></tr>
+                <tr><td>FD+Debt MF</td><td>₹${fmt(debt_base)} (${baseDebtPct}%)</td><td><span style="color:${shifted_debt - debt_base >= 0 ? '#10B981' : '#EF4444'}">${fixed_shift}%</span></td><td>₹${fmt(shifted_debt)} (${survDebtPct}%)</td></tr>
+                <tr><td>Savings / Cash Balance</td><td>₹${fmt(cash_base)} (${baseCashPct}%)</td><td><span>0%</span></td><td>₹${fmt(cash_base)} (${survCashPct}%)</td></tr>
+                <tr><td>Real Estate</td><td>₹${fmt(re_base)} (${baseRePct}%)</td><td><span style="color:var(--text-muted)">[🔒 Locked]</span></td><td>₹${fmt(re_base)} (${survRePct}%)</td></tr>
+            `;
+
+            document.getElementById('dmg_base_eq').innerText = `${baseEquityPct}%`;
+            document.getElementById('dmg_base_fd').innerText = `${baseDebtPct}%`;
+            document.getElementById('dmg_base_cs').innerText = `${baseCashPct}%`;
+            
+            document.getElementById('dmg_surv_eq').innerText = `₹${fmt(shifted_equity)}`;
+            document.getElementById('dmg_surv_fd').innerText = `₹${fmt(shifted_debt)}`;
+            document.getElementById('dmg_surv_cs').innerText = `₹${fmt(cash_base)}`;
+            
+            document.getElementById('dmg_liquid_pool').innerText = `₹${fmt(total_starting_liquid_pool)}`;
+            document.getElementById('dmg_fire_milestone').innerText = `₹${fmt(targetFICorpus)}`;
+            
+            const dmgShortfallEl = document.getElementById('dmg_shortfall_gap');
+            if (remainingDistanceGap > 0) {
+                dmgShortfallEl.innerText = `₹${fmt(remainingDistanceGap)}`;
+                dmgShortfallEl.style.color = '#FF003C';
+            } else {
+                dmgShortfallEl.innerText = '0 (TARGET MILESTONE ACHIEVED)';
+                dmgShortfallEl.style.color = '#10B981';
+            }
+
+            const denominator = total_assets || 1;
+            const eq_weight = equity_base / denominator;
+            const fd_weight = debt_base / denominator;
+            const cash_weight = cash_base / denominator;
+            const re_weight = re_base / denominator;
+
+            const eq_3 = 14.5, eq_5 = 12.8, eq_10 = 11.5;
+            const fd_3 = 7.1,  fd_5 = 6.8,  fd_10 = 7.0;
+            const cs_3 = 3.5,  cs_5 = 3.5,  cs_10 = 3.5;
+            const re_3 = 6.0,  re_5 = 5.5,  re_10 = 5.8;
+
+            const blended_3 = (eq_weight * eq_3) + (fd_weight * fd_3) + (cash_weight * cs_3) + (re_weight * re_3);
+            const blended_5 = (eq_weight * eq_5) + (fd_weight * fd_5) + (cash_weight * cs_5) + (re_weight * re_3);
+            const blended_10 = (eq_weight * eq_10) + (fd_weight * fd_10) + (cash_weight * cs_10) + (re_weight * re_3);
+
+            document.getElementById('v_3yr').innerText = "+" + blended_3.toFixed(1) + "% CAGR";
+            document.getElementById('v_5yr').innerText = "+" + blended_5.toFixed(1) + "% CAGR";
+            document.getElementById('v_10yr').innerText = "+" + blended_10.toFixed(1) + "% CAGR";
+            
+            if (activeGuidedStep === 1) {
+                setTimeout(() => { triggerStepFocus(2); }, 1500);
+            }
+        }
+
+        function hydrateFunnel() {
+            try {
+                const saved = localStorage.getItem(storageKey);
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    if (state.age) document.getElementById('current_age').value = state.age;
+                    if (state.income) document.getElementById('inc_salary').value = state.income;
+                    
+                    if (state.debt) {
+                        const total_debt = state.debt;
+                        document.getElementById('lia_home').value = total_debt;
+                        document.getElementById('lia_other').value = 0;
+                    }
+                    if (state.assets) {
+                        const liquid_assets = state.assets;
+                        document.getElementById('ast_demat').value = Math.round(liquid_assets * 0.50);
+                        document.getElementById('ast_fd').value = Math.round(liquid_assets * 0.40);
+                        document.getElementById('ast_cash').value = Math.round(liquid_assets * 0.10);
+                    }
+                    if (state.house) {
+                        document.getElementById('ast_re').value = state.house;
+                    }
+                    if (state.burn) {
+                        const baseline_burn = state.burn;
+                        document.getElementById('exp_rent_emi').value = Math.round(baseline_burn * 0.40);
+                        document.getElementById('exp_other_emi').value = Math.round(baseline_burn * 0.10);
+                        document.getElementById('exp_food_kirana').value = Math.round(baseline_burn * 0.20);
+                        document.getElementById('exp_utilities').value = Math.round(baseline_burn * 0.06);
+                        document.getElementById('exp_domestic_help').value = Math.round(baseline_burn * 0.05);
+                        document.getElementById('exp_fuel_commute').value = Math.round(baseline_burn * 0.09);
+                        document.getElementById('exp_dining_out').value = Math.round(baseline_burn * 0.06);
+                        document.getElementById('exp_misc_buffer').value = Math.round(baseline_burn * 0.04);
+                    }
+                }
+            } catch(e) { console.error("Funnel parsing bypassed safely:", e); }
+        }
+
+        const active_ids = [
+            'current_age', 'exp_rent_emi', 'exp_other_emi', 'exp_food_kirana', 'exp_utilities', 
+            'exp_domestic_help', 'exp_fuel_commute', 'exp_dining_out', 'exp_misc_buffer', 
+            'inc_salary', 'ast_demat', 'ast_fd', 'ast_cash', 'ast_re', 'lia_home', 'lia_other'
+        ];
+        active_ids.forEach(id => { 
+            const el = document.getElementById(id); 
+            if(el) el.addEventListener('input', calculate); 
+        });
+        
+        hydrateFunnel();
+        calculate();
+
+        triggerStepFocus(1);
+    </script>
+</body>
+</html>
