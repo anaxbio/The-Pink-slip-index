@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Pink Slip Index | Quick-Start Runway Baseline</title>
+    
+    <script>
+        (function() {
+            if (localStorage.getItem('pinkslip_token')) {
+                window.location.replace('vault.html');
+            }
+        })();
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root { 
