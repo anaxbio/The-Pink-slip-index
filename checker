@@ -829,48 +829,73 @@
                                                     Number(document.getElementById('exp_other_1').value) + 
                                                     Number(document.getElementById('exp_other_2').value) + 
                                                     Number(document.getElementById('exp_misc_buffer').value);
+
+            const total_annual_spikes = Number(document.getElementById('ann_insurance').value) +
+                                         Number(document.getElementById('ann_school_fees').value) +
+                                         Number(document.getElementById('ann_festivals').value) +
+                                         Number(document.getElementById('ann_maintenance').value) +
+                                         Number(document.getElementById('ann_vacations').value);
+
+            const total_active_inflows = Number(document.getElementById('inc_salary').value) +
+                                          Number(document.getElementById('inc_business').value) +
+                                          Number(document.getElementById('inc_consulting').value);
+
+            const total_passive_inflows = Number(document.getElementById('inc_rental').value);
+
+            const total_mortgage_debts = Number(document.getElementById('lia_home_primary').value) +
+                                          Number(document.getElementById('lia_home_second').value);
+
+            const total_other_debts = Number(document.getElementById('lia_auto').value) +
+                                       Number(document.getElementById('lia_personal').value) +
+                                       Number(document.getElementById('lia_education').value) +
+                                       Number(document.getElementById('lia_cc').value) +
+                                       Number(document.getElementById('lia_other').value);
+
+            const total_equity_base = Number(document.getElementById('ast_demat').value) +
+                                       Number(document.getElementById('ast_mf_eq').value) +
+                                       Number(document.getElementById('ast_pe').value);
+
+            const total_debt_base = Number(document.getElementById('ast_fd').value) +
+                                     Number(document.getElementById('ast_mf_debt').value) +
+                                     Number(document.getElementById('ast_bonds').value) +
+                                     Number(document.getElementById('ast_nps').value);
+
+            const total_cash_base = Number(document.getElementById('ast_cash').value);
+
+            const total_metals_base = Number(document.getElementById('ast_gold_digi').value) +
+                                       Number(document.getElementById('ast_gold_phys').value);
+
+            const total_real_estate_base = Number(document.getElementById('ast_re_primary').value) +
+                                            Number(document.getElementById('ast_re_second').value);
             
             const current_inputs_payload = {
                 current_age: Number(document.getElementById('current_age').value),
                 inflation_slider: inflation_pct,
                 panic_toggle: isPanicStateActive,
                 
-                inc_salary: Number(document.getElementById('inc_salary').value),
-                inc_business: Number(document.getElementById('inc_business').value),
-                inc_consulting: Number(document.getElementById('inc_consulting').value),
-                inc_rental: Number(document.getElementById('inc_rental').value),
+                // PASSING THE MACRO INCOME STREAMS OVER THE WEB WIRE
+                total_active_inflows: total_active_inflows,
+                total_passive_inflows: total_passive_inflows,
                 
-                // DELETED 10 INDIVIDUAL FIELDS OUT OF NETWORK STREAM - PASSING THE 2 AGREED INTERMEDIATE MACRO SUMS
+                // PASSING THE 2 INTERMEDIATE EXPENSE MACRO SUMS
                 total_fixed_bank_emis: total_fixed_bank_emis,
                 total_inflating_lifestyle_costs: total_inflating_lifestyle_costs,
                 
-                ann_insurance: Number(document.getElementById('ann_insurance').value),
-                ann_school_fees: Number(document.getElementById('ann_school_fees').value),
-                ann_festivals: Number(document.getElementById('ann_festivals').value),
-                ann_maintenance: Number(document.getElementById('ann_maintenance').value),
-                ann_vacations: Number(document.getElementById('ann_vacations').value),
+                // PASSING ONE CONSOLIDATED ANNUAL BILL FIELD
+                total_annual_spikes: total_annual_spikes,
                 
-                ast_demat: Number(document.getElementById('ast_demat').value),
-                ast_mf_eq: Number(document.getElementById('ast_mf_eq').value),
-                ast_pe: Number(document.getElementById('ast_pe').value),
-                ast_fd: Number(document.getElementById('ast_fd').value),
-                ast_mf_debt: Number(document.getElementById('ast_mf_debt').value),
-                ast_bonds: Number(document.getElementById('ast_bonds').value),
-                ast_nps: Number(document.getElementById('ast_nps').value),
-                ast_cash: Number(document.getElementById('ast_cash').value),
-                ast_gold_digi: Number(document.getElementById('ast_gold_digi').value),
-                ast_re_primary: Number(document.getElementById('ast_re_primary').value),
-                ast_re_second: Number(document.getElementById('ast_re_second').value),
-                ast_gold_phys: Number(document.getElementById('ast_gold_phys').value),
+                // PASSING COLLAPSED MACRO WEALTH BLOCKS
+                total_equity_base: total_equity_base,
+                total_debt_base: total_debt_base,
+                total_cash_base: total_cash_base,
+                total_metals_base: total_metals_base,
+                total_real_estate_base: total_real_estate_base,
                 
-                lia_home_primary: Number(document.getElementById('lia_home_primary').value),
-                lia_home_second: Number(document.getElementById('lia_home_second').value),
-                lia_auto: Number(document.getElementById('lia_auto').value),
-                lia_personal: Number(document.getElementById('lia_personal').value),
-                lia_education: Number(document.getElementById('lia_education').value),
-                lia_cc: Number(document.getElementById('lia_cc').value),
-                lia_other: Number(document.getElementById('lia_other').value),
+                // PASSING LIABILITIES MERGED INTO MORTGAGE VS CONSUMER LIENS
+                total_mortgage_debts: total_mortgage_debts,
+                total_other_debts: total_other_debts,
                 
+                // RETAINED RAW VALIDATION HANDLES FOR DISASTER SCENARIO MATH RUNS
                 stcg_equity: Number(document.getElementById('stcg_equity').value),
                 re_taxable_gain: Number(document.getElementById('re_taxable_gain').value),
                 re_distress_pct: Number(document.getElementById('re_distress_pct').value),
@@ -982,8 +1007,8 @@
                         document.getElementById('simulated_monthly_rent').value = 0;
                     }
 
-                    const active_inflow = isPanicStateActive ? 0 : (current_inputs_payload.inc_salary + current_inputs_payload.inc_business + current_inputs_payload.inc_consulting);
-                    const total_inflow = active_inflow + current_inputs_payload.inc_rental;
+                    const active_inflow = isPanicStateActive ? 0 : current_inputs_payload.total_active_inflows;
+                    const total_inflow = active_inflow + current_inputs_payload.total_passive_inflows;
                     const base_monthly_outflow = s_data.raw_monthly_burn + (s_data.raw_monthly_burn * (current_inputs_payload.expense_shock / 100)) + (s_data.raw_annual_spikes / 12);
                     const net_monthly_cashflow = total_inflow - (base_monthly_outflow * (1 + (inflation_pct / 100)));
 
