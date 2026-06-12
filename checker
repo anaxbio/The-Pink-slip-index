@@ -165,11 +165,6 @@
         body[data-theme="panic"] .gauge-track-background { stroke: #1E293B; }
         body[data-theme="panic"] .velocity-row { border-bottom-color: #1E293B; }
 
-        /* ==========================================================================
-           💎 PREMIUM INTENT ENGINE SWEEP & HEADROOM OPTIMIZATION STYLES
-           ========================================================================== */
-        
-        /* 1. Global Card Softening state during active background crunching */
         .scoreboard-card.is-calculating #val_months,
         .scoreboard-card.is-calculating #val_years,
         .scoreboard-card.is-calculating .gauge-digital-readout-center,
@@ -179,7 +174,6 @@
             transition: opacity 0.2s ease, filter 0.2s ease;
         }
 
-        /* 2. Block 1: Capital Runway Timeline - Precision Laser Scan Line */
         @keyframes laser-scan {
             0% { top: -5%; opacity: 0; }
             20% { opacity: 1; }
@@ -200,7 +194,6 @@
             background: linear-gradient(90deg, transparent, var(--neon-red), transparent);
         }
 
-        /* 3. Block 2: Index Gauge - Kinetic Instrument Vibration & Outer Chasing Glow */
         @keyframes needle-quiver {
             0% { transform: rotate(0deg); }
             20% { transform: rotate(-0.75deg); }
@@ -237,7 +230,6 @@
             stroke: #334155;
         }
 
-        /* 4. Block 3: Matrix Table - Cinematic Silk Shimmer Grid Overlay */
         @keyframes matrix-shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
@@ -805,9 +797,6 @@
             return result.join(" ");
         }
 
-        /* ==========================================================================
-           ⚡ DEBOUNCED MULTI-CORE INTENT GATEKEEPER IMPLEMENTATION
-           ========================================================================== */
         let debounceTimer = null;
 
         function startScoreboardAnimations() {
@@ -828,6 +817,19 @@
             const isPanicStateActive = document.getElementById('panic_toggle_state').value === "true";
             const inflation_pct = Number(document.getElementById('inflation_slider').value);
             
+            // RUN INTERNAL CALCULATIONS LOCALLY AS AGREED WITHOUT CHANGING THE INPUT BOXES
+            const total_fixed_bank_emis = Number(document.getElementById('exp_rent_emi').value) + 
+                                          Number(document.getElementById('exp_other_emi').value);
+            
+            const total_inflating_lifestyle_costs = Number(document.getElementById('exp_food_kirana').value) + 
+                                                    Number(document.getElementById('exp_utilities').value) + 
+                                                    Number(document.getElementById('exp_domestic_help').value) + 
+                                                    Number(document.getElementById('exp_fuel_commute').value) + 
+                                                    Number(document.getElementById('exp_dining_out').value) + 
+                                                    Number(document.getElementById('exp_other_1').value) + 
+                                                    Number(document.getElementById('exp_other_2').value) + 
+                                                    Number(document.getElementById('exp_misc_buffer').value);
+            
             const current_inputs_payload = {
                 current_age: Number(document.getElementById('current_age').value),
                 inflation_slider: inflation_pct,
@@ -838,16 +840,9 @@
                 inc_consulting: Number(document.getElementById('inc_consulting').value),
                 inc_rental: Number(document.getElementById('inc_rental').value),
                 
-                exp_rent_emi: Number(document.getElementById('exp_rent_emi').value),
-                exp_other_emi: Number(document.getElementById('exp_other_emi').value),
-                exp_food_kirana: Number(document.getElementById('exp_food_kirana').value),
-                exp_utilities: Number(document.getElementById('exp_utilities').value),
-                exp_domestic_help: Number(document.getElementById('exp_domestic_help').value),
-                exp_fuel_commute: Number(document.getElementById('exp_fuel_commute').value),
-                exp_dining_out: Number(document.getElementById('exp_dining_out').value),
-                exp_other_1: Number(document.getElementById('exp_other_1').value),
-                exp_other_2: Number(document.getElementById('exp_other_2').value),
-                exp_misc_buffer: Number(document.getElementById('exp_misc_buffer').value),
+                // DELETED 10 INDIVIDUAL FIELDS OUT OF NETWORK STREAM - PASSING THE 2 AGREED INTERMEDIATE MACRO SUMS
+                total_fixed_bank_emis: total_fixed_bank_emis,
+                total_inflating_lifestyle_costs: total_inflating_lifestyle_costs,
                 
                 ann_insurance: Number(document.getElementById('ann_insurance').value),
                 ann_school_fees: Number(document.getElementById('ann_school_fees').value),
@@ -892,7 +887,6 @@
                 portfolio_tax_drag: Number(document.getElementById('param_tax_drag').value)
             };
 
-            // Instant responsive updates to contextual slider badges
             document.getElementById('lbl_eq_shift_badge').innerText = current_inputs_payload.equity_shift + "%";
             document.getElementById('lbl_met_shift_badge').innerText = current_inputs_payload.metals_shift + "%";
             document.getElementById('lbl_exp_shock_badge').innerText = current_inputs_payload.expense_shock + "%";
@@ -934,17 +928,12 @@
         }
 
         function calculate() {
-            // 1. Perform local UI transformations instantly for total slider responsiveness
             const payload = updateLocalVisualsOnly();
             if (!payload) return;
 
-            // 2. Flash high-end mechanical micro-animations across scoreboard indicators immediately
             startScoreboardAnimations();
-
-            // 3. Clear any existing timers to absorb rapid sliding inputs safely
             clearTimeout(debounceTimer);
 
-            // 4. Delay heavy backend execution until user movement achieves stability (350ms pause)
             debounceTimer = setTimeout(() => {
                 executeServerCalculationEngine(payload);
             }, 350);
@@ -1158,7 +1147,6 @@
             } catch (e) {
                 console.error("Transmission exception encountered.", e);
             } finally {
-                // 5. Instantly clear micro-animations once response successfully drops into RAM
                 stopScoreboardAnimations();
             }
         }
