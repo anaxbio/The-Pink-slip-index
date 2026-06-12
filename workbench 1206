@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Pink Slip Index | Restructuring Stress Workbench</title>
+
+    <script>
+        (function() {
+            if (localStorage.getItem('pinkslip_token')) {
+                window.location.replace('vault.html');
+            }
+        })();
+    </script>
+
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -73,7 +82,7 @@
         
         .site-flow-step-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 4px; }
         .flow-step-num { background: #F1F5F9; color: var(--text-main); font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.8rem; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color); }
-        .flow-step-item strong { color: var(--text-main); font-weight: 700; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.02em; }
+        .flow-step-item strong { color: var(--text-main); font-weight: 700; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 1px; }
 
         .locked-engine-panel { padding: 25px; border-radius: 12px; background: #FAF9F6; border: 1px solid #E2DED0; margin-top: 20px; scroll-margin-top: 30px; }
         .locked-engine-header { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-main); border-bottom: 2px solid #CBD5E1; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -114,12 +123,11 @@
         .preset-pill-btn.active { background: #2563EB; border-color: #2563EB; color: #FFFFFF; }
         .output-header { margin-top: 30px; font-size: 1.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* 💎 RE-ARCHITECTED PRESET 3-COLUMN LAYOUT MATRIX STYLE */
+        /* scoreboard cards configuration profiles */
         .unified-3block-scoreboard-row { display: grid; grid-template-columns: 30fr 35fr 35fr; gap: 25px; margin-bottom: 30px; align-items: stretch; }
         .scoreboard-card { background: var(--bg-card); padding: 24px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; box-sizing: border-box; justify-content: flex-start; position: relative; overflow: hidden; }
         .scoreboard-card-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
         
-        /* VAULT DIAL GAUGE RECOVERY COMPONENT LAYOUTS */
         .gauge-dial-viewbox-wrapper { position: relative; width: 100%; max-width: 200px; margin: 0 auto; display: flex; justify-content: center; align-items: center; min-height: 110px; }
         .gauge-svg-element { width: 100%; height: auto; overflow: visible; }
         .gauge-track-background { fill: none; stroke: #F1F5F9; stroke-width: 14; stroke-linecap: round; transition: stroke 0.25s ease; }
@@ -615,9 +623,6 @@
                 <p style="margin:0 0 15px 0; color:#94A3B8; font-size:0.95rem; line-height:1.5;">
                     Testing Mode Active: All calculated asset allocation variables, target requirements, and structural shortfalls are unredacted for review.
                 </p>
-                <p style="margin:0 0 15px 0; color:#94A3B8; font-size:0.95rem; line-height:1.5;">
-                    Testing Mode Active: All calculated asset allocation variables, target requirements, and structural shortfalls are unredacted for review.
-                </p>
                 <button onclick="transitionDamageToCheckout()" style="background:linear-gradient(135deg, #2563EB, #1E40AF); color:white; font-weight:700; border:none; padding:14px 28px; border-radius:6px; cursor:pointer; text-transform:uppercase; letter-spacing:0.05em; font-size:0.95rem; box-shadow:0 4px 14px rgba(37,99,235,0.3);">
                     🔒 Proceed to Premium Verification
                 </button>
@@ -740,12 +745,12 @@
             statusDiv.style.display = 'none';
 
             try {
-                // 1. Securely fetch the public Key ID from router_premium.py
+                // 1. Fetch backend callback configuration triggers
                 const keyRes = await fetch('https://api.pinkslipindex.com/checkout/key');
                 if (!keyRes.ok) throw new Error("Failed to retrieve gateway key.");
                 const { key_id } = await keyRes.json();
 
-                // 2. Fetch Order ID from Oracle Server
+                // 2. Request unique checkout session metrics
                 const orderRes = await fetch('https://api.pinkslipindex.com/checkout/create_order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -755,7 +760,7 @@
                 if (!orderRes.ok) throw new Error("Backend connection failed.");
                 const { order_id } = await orderRes.json();
 
-                // 3. Configure Razorpay dynamically
+                // 3. Configure Razorpay sandbox dynamically
                 const options = {
                     "key": key_id, 
                     "amount": 99900,
@@ -767,8 +772,8 @@
                         statusDiv.style.background = '#064e3b';
                         statusDiv.style.border = '1px solid #047857';
                         statusDiv.style.color = '#6ee7b7';
-                        statusDiv.innerText = "Payment Successful! Magic Link dispatched. Check your inbox and click the secure link to authenticate and unlock the Vault.";
-                        btn.innerText = "Link Dispatched";
+                        statusDiv.innerText = "Payment Successful! Your access email has been whitelisted on the ledger document. Launch the Premium Vault workspace and authenticate using your Google Profile to unlock the deck.";
+                        btn.innerText = "Identity Whitelisted";
                     },
                     "prefill": { "email": emailInput },
                     "theme": { "color": "#2563EB" }
@@ -963,7 +968,6 @@
             const totalArcStrokeLength = 502; 
             const currentFillStrokeLength = (finalPsiScore / 100) * totalArcStrokeLength;
             const greenPathSegment = document.getElementById('gauge_green_fill');
-            const redPathSegment = document.getElementById('gauge_red_fill');
 
             if (greenPathSegment) {
                 greenPathSegment.style.display = 'block';
