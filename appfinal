@@ -19,6 +19,7 @@ app = FastAPI(
 
 # Phase 5 Checklist Target: Inject FastAPI CORS Middleware
 # Allows the static frontend on Cloudflare Pages to securely connect to this ARM backend
+# HARDENED BOUNDARY: Explicitly locked origins. Wildcards (*) are completely barred here.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
