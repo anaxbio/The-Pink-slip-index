@@ -2,6 +2,7 @@ import os
 import time
 import jwt
 import requests
+import razorpay
 from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from pydantic import BaseModel
 
@@ -57,12 +58,25 @@ class VaultFlatPayload(BaseModel):
 class GoogleAuthPayload(BaseModel):
     id_token: str
 
+# NEW: Validation schema for order creation requests arriving from the free workbench
+class RazorpayOrderPayload(BaseModel):
+    customer_email: str
+
 
 # --- SYSTEM ARCHITECTURE KEYS RETRIEVAL ---
 JWT_SECRET = os.getenv("JWT_SECRET_KEY", "fallback_secret_key_change_me")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 GOOGLE_CLIENT_ID = "252804831257-voq08lhhs151jtksvq3pfpl28vgb9ods.apps.googleusercontent.com"
 WHITELIST_FILE_PATH = "/home/ubuntu/financial_api/premium_whitelist.txt"
+
+
+# --- INITIALIZE RAZORPAY TEST KEY SDK CLIENT ---
+razorpay_client = razorpay.Client(
+    auth=(
+        os.getenv("RAZORPAY_KEY_ID", "rzp_test_fallback"), 
+        os.getenv("RAZORPAY_KEY_SECRET", "fallback_secret")
+    )
+)
 
 
 # --- STRICT PRODUCTION TOKEN SECURITY GATEWAY (LIGHTWEIGHT RAM ENGINE) ---
@@ -83,6 +97,36 @@ async def verify_premium_token(authorization: str = Header(None)):
         return payload
     except (ValueError, jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         raise HTTPException(status_code=401, detail="Access token is invalid or expired.")
+
+
+# --- DYNAMIC RAZORPAY INTEGRATION ENDPOINTS ---
+
+@router.get("/checkout/key")
+def get_razorpay_public_key():
+    """
+    Returns the public Razorpay Key ID to the frontend checkout widget.
+    Allows testing configurations to stay isolated without front-end key hardcoding.
+    """
+    return {"key_id": os.getenv("RAZORPAY_KEY_ID", "rzp_test_fallback")}
+
+
+@router.post("/checkout/create_order")
+async def create_razorpay_order(payload: RazorpayOrderPayload):
+    """
+    Generates a backend-validated Razorpay order session ticket.
+    Communicates server-to-server with Razorpay's API to seal the exact price point.
+    """
+    try:
+        # Amount structured in Paisa: ₹999.00 -> 99900
+        options = {
+            "amount": 99900,
+            "currency": "INR",
+            "receipt": f"receipt_vault_{int(time.time())}"
+        }
+        order_packet = razorpay_client.order.create(data=options)
+        return {"order_id": order_packet["id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Razorpay session creation failed: {str(e)}")
 
 
 # --- PRODUCTION CALCULATION LOOP ENGINE ---
@@ -297,16 +341,10 @@ async def execute_isolated_ledger_update(request: Request):
     Headless webhook collector parsing validated payment engine packets.
     Extracts the authenticated email address, appends tracking arrays to the whitelist file, and kills connection.
     """
-    # NOTE: Secure Razorpay or alternative gateway cryptographic header signature validation logic is integrated here
-    # before execution proceeds to prevent malicious text injection vector strings.
     try:
         raw_body = await request.json()
-        
-        # Target extraction points across transactional parameters
-        # Pre-filled read-only email strings are extracted directly here based on gateway payload structures
         customer_email = None
         
-        # Example structured extraction fallback layout map for testing validation arrays
         if "payload" in raw_body and "payment" in raw_body["payload"]:
             customer_email = raw_body["payload"]["payment"]["entity"].get("email", "").lower().strip()
         elif "email" in raw_body:
