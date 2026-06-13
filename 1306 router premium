@@ -95,8 +95,8 @@ async def verify_premium_token(authorization: str = Header(None)):
         
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return payload
-    except (ValueError, jwt.ExpiredSignatureError, jwt.InvalidTokenError):
-        raise HTTPException(status_code=401, detail="Access token is invalid or expired.")
+    except (ValueError, jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
+        raise HTTPException(status_code=401, detail=f"Access token is invalid or expired: {str(e)}")
 
 
 # --- DYNAMIC RAZORPAY INTEGRATION ENDPOINTS ---
@@ -126,7 +126,7 @@ async def create_razorpay_order(payload: RazorpayOrderPayload):
         order_packet = razorpay_client.order.create(data=options)
         return {"order_id": order_packet["id"]}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Razorpay session creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Razorpay session creation failed: {type(e).__name__} - {str(e)}")
 
 
 # --- PRODUCTION CALCULATION LOOP ENGINE ---
@@ -330,8 +330,22 @@ async def verify_google_identity_session(payload: GoogleAuthPayload):
         
         return {"pinkslip_token": local_app_token, "email": user_email}
         
-    except requests.RequestException:
-        raise HTTPException(status_code=503, detail="External identity server verification timeout.")
+    except HTTPException as he:
+        raise he
+    except requests.RequestException as re:
+        raise HTTPException(status_code=503, detail=f"External identity server verification timeout/error: {str(re)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Google identity login fatal internal exception: {type(e).__name__} - {str(e)}")
+
+
+# --- LEGACY ALIAS ENDPOINT FOR APPROVED RAZORPAY DASHBOARD LINK ---
+@router.post("/webhook/checkout")
+async def legacy_razorpay_webhook_handler(request: Request):
+    """
+    Intercepts incoming payment traffic hitting the dashboard-approved endpoint 
+    and pipes the raw payload stream straight into the secure ledger sync matrix.
+    """
+    return await execute_isolated_ledger_update(request)
 
 
 # --- PLUG-AND-PLAY WEBHOOK CHANNEL (BLIND PIPELINE ACCESS LOCK) ---
@@ -353,13 +367,28 @@ async def execute_isolated_ledger_update(request: Request):
         if not customer_email or "@" not in customer_email:
             raise HTTPException(status_code=400, detail="Unable to extract verified transactional target metadata.")
             
-        # Append target email handle safely into the dead-end flat ledger tracking document
-        with open(WHITELIST_FILE_PATH, "a+") as f:
-            f.seek(0)
-            existing_records = [line.strip().lower() for line in f.readlines()]
-            if customer_email not in existing_records:
-                f.write(f"\n{customer_email}")
+        # --- FIXED TWO-STEP TEXT FILE WRITING BLOCK ---
+        existing_records = []
+        needs_newline = False
+        
+        # Step 1: Read current states safely using standalone execution streams
+        if os.path.exists(WHITELIST_FILE_PATH):
+            with open(WHITELIST_FILE_PATH, "r") as f:
+                lines = f.readlines()
+                existing_records = [line.strip().lower() for line in lines if line.strip()]
+                if lines and not lines[-1].endswith("\n"):
+                    needs_newline = True
+
+        # Step 2: Append data without internal pointer drift errors
+        if customer_email not in existing_records:
+            with open(WHITELIST_FILE_PATH, "a") as f:
+                if needs_newline:
+                    f.write(f"\n{customer_email}\n")
+                else:
+                    f.write(f"{customer_email}\n")
                 
         return {"status": "synchronized", "ledger": "updated"}
-    except Exception:
-        raise HTTPException(status_code=400, detail="Parsing operational callback array configurations failed.")
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Webhook operational processing failed: {type(e).__name__} - {str(e)}")
