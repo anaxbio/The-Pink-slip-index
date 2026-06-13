@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Pink Slip Index | Premium Asset Workspace</title>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -21,6 +24,13 @@
         body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; padding: 20px; margin: 0; -webkit-font-smoothing: antialiased; }
         .container { display: flex; width: 95%; max-width: 2400px; margin: auto; gap: 40px; position: relative; }
         
+        /* HARD INITIAL VALIDATION CANVAS SHIELD OVERLAY */
+        #identity_gate_canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #090B0F; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #F1F5F9; }
+        .gate-card { background: #11141D; border: 1px solid #1E293B; border-radius: 16px; padding: 50px; max-width: 480px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .gate-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 12px 0; }
+        .gate-desc { color: #94A3B8; font-size: 0.95rem; line-height: 1.6; margin: 0 0 30px 0; }
+        .gate-mount-target { display: flex; justify-content: center; width: 100%; min-height: 50px; }
+
         .sidebar, .control-bar, .locked-engine-panel, .central-matrix-grid, .thermometer-container {
             border: 2px solid transparent;
             transition: border-color 0.25s ease, box-shadow 0.25s ease;
@@ -246,7 +256,17 @@
     </style>
 </head>
 <body>
-    <div id="app-container">
+    <div id="identity_gate_canvas">
+        <div class="gate-card">
+            <h2 class="gate-title">🛡️ Premium Vault Gate</h2>
+            <p class="gate-desc">This calculation matrix dashboard configuration is locked. Please log in with your whitelisted Google Profile identity to continue.</p>
+            <div class="gate-mount-target">
+                <div id="google_secure_login_btn"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" style="display: none;">
         <div class="container">
             <div class="sidebar" id="onboard_sidebar_block">
                 <div class="sidebar-header">
@@ -371,6 +391,7 @@
                                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                                     <div><label>↳ STCG Exposure (₹)</label><input type="number" id="stcg_equity" value="0"><span id="lbl_word_stcg_equity" class="sidebar-word-display"></span></div>
                                     <div><label>↳ Est. Prop Gain (₹)</label><input type="number" id="re_taxable_gain" value="0"><span id="lbl_word_re_taxable_gain" class="sidebar-word-display"></span></div>
+                                end view box matrix -->
                                 </div>
                                 <div><label>↳ Distress Penalty (%)</label><input type="number" id="re_distress_pct" value="16"><span id="lbl_word_re_distress_pct" class="sidebar-word-display"></span></div>
                             </div>
@@ -413,9 +434,8 @@
                 <div class="header-split-wrapper">
                     <div class="header-branding-pane">
                         <div class="main-title-block">
-    <h1>PINK SLIP INDEX</h1>
-    <p>QUANT COMPUTATION ENGINE</p>
-</div>
+                            <h1>PINK SLIP INDEX</h1>
+                            <p>QUANT COMPUTATION ENGINE</p>
                         </div>
                     </div>
                 </div>
@@ -681,23 +701,75 @@
     </div>
 
     <script>
+        const GOOGLE_CLIENT_ID = "252804831257-voq08lhhs151jtksvq3pfpl28vgb9ods.apps.googleusercontent.com";
         let currentToken = localStorage.getItem('pinkslip_token');
+
+        // Parse explicit callback metrics arriving from query tokens
         const urlParams = new URLSearchParams(window.location.search);
         const urlToken = urlParams.get('token');
-
         if (urlToken) {
             currentToken = urlToken;
             localStorage.setItem('pinkslip_token', currentToken);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        if (!currentToken) {
-            alert("Unauthorized context interface execution. Redirecting to initialization track.");
-            window.location.href = 'index.html';
+        // INITIALIZATION TIMELINE SHIELD ROUTING CONTROLLER
+        window.onload = function() {
+            if (currentToken) {
+                // Pre-existing session token found, bypass verification canvas instantly
+                document.getElementById('identity_gate_canvas').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                setTimeout(calculate, 100);
+            } else {
+                // Session parameters missing, mount Google's Identity engine framework onto target div
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleAuthResponse
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById("google_secure_login_btn"),
+                    { theme: "dark", size: "large", width: "320" }
+                );
+            }
+        };
+
+        // GOOGLE SIGN IN RESPONSE WEB TOKEN EXCHANGER
+        async function handleGoogleAuthResponse(authResult) {
+            const gateButtonContainer = document.getElementById("google_secure_login_btn");
+            gateButtonContainer.style.opacity = "0.5";
+            gateButtonContainer.style.pointerEvents = "none";
+
+            try {
+                const exchangeResponse = await fetch('https://api.pinkslipindex.com/api/v2/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_token: authResult.credential })
+                });
+
+                if (!exchangeResponse.ok) {
+                    const errorDetails = await exchangeResponse.json();
+                    alert(errorDetails.detail || "Identity verification authorization failed.");
+                    gateButtonContainer.style.opacity = "1";
+                    gateButtonContainer.style.pointerEvents = "auto";
+                    return;
+                }
+
+                const responseData = await exchangeResponse.json();
+                currentToken = responseData.pinkslip_token;
+                localStorage.setItem('pinkslip_token', currentToken);
+
+                // Open up the workspace UI deck
+                document.getElementById('identity_gate_canvas').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                calculate();
+
+            } catch (err) {
+                console.error("Network communication exception encountered:", err);
+                alert("Identity verification server node connection timeout.");
+                gateButtonContainer.style.opacity = "1";
+                gateButtonContainer.style.pointerEvents = "auto";
+            }
         }
-        
-        document.getElementById('app-container').style.display = 'block';
-        setTimeout(calculate, 100);
 
         document.getElementById('btn-logout').addEventListener('click', () => { 
             localStorage.removeItem('pinkslip_token');
@@ -818,7 +890,6 @@
             const isPanicStateActive = document.getElementById('panic_toggle_state').value === "true";
             const inflation_pct = Number(document.getElementById('inflation_slider').value);
             
-            // RUN INTERNAL CALCULATIONS LOCALLY AS AGREED WITHOUT CHANGING THE INPUT BOXES
             const total_fixed_bank_emis = Number(document.getElementById('exp_rent_emi').value) + 
                                           Number(document.getElementById('exp_other_emi').value);
             
@@ -874,29 +945,23 @@
                 inflation_slider: inflation_pct,
                 panic_toggle: isPanicStateActive,
                 
-                // PASSING THE MACRO INCOME STREAMS OVER THE WEB WIRE
                 total_active_inflows: total_active_inflows,
                 total_passive_inflows: total_passive_inflows,
                 
-                // PASSING THE 2 INTERMEDIATE EXPENSE MACRO SUMS
                 total_fixed_bank_emis: total_fixed_bank_emis,
                 total_inflating_lifestyle_costs: total_inflating_lifestyle_costs,
                 
-                // PASSING ONE CONSOLIDATED ANNUAL BILL FIELD
                 total_annual_spikes: total_annual_spikes,
                 
-                // PASSING COLLAPSED MACRO WEALTH BLOCKS
                 total_equity_base: total_equity_base,
                 total_debt_base: total_debt_base,
                 total_cash_base: total_cash_base,
                 total_metals_base: total_metals_base,
                 total_real_estate_base: total_real_estate_base,
                 
-                // PASSING LIABILITIES MERGED INTO MORTGAGE VS CONSUMER LIENS
                 total_mortgage_debts: total_mortgage_debts,
                 total_other_debts: total_other_debts,
                 
-                // RETAINED RAW VALIDATION HANDLES FOR DISASTER SCENARIO MATH RUNS
                 stcg_equity: Number(document.getElementById('stcg_equity').value),
                 re_taxable_gain: Number(document.getElementById('re_taxable_gain').value),
                 re_distress_pct: Number(document.getElementById('re_distress_pct').value),
@@ -966,6 +1031,7 @@
         }
 
         async function executeServerCalculationEngine(current_inputs_payload) {
+            if (!currentToken) return;
             const isPanicStateActive = current_inputs_payload.panic_toggle;
             const inflation_pct = current_inputs_payload.inflation_slider;
 
@@ -979,9 +1045,11 @@
                     body: JSON.stringify(current_inputs_payload)
                 });
 
+                // SECURITY GATE INTERCEPTOR: Bounce users immediately if the token is revoked/invalid
                 if (server_response.status === 401 || server_response.status === 403) {
-                    alert("Session expired. Please re-authenticate your premium gateway profile account.");
-                    window.location.href = 'index.html';
+                    localStorage.removeItem('pinkslip_token');
+                    alert("Your secure premium identity context is expired or unauthorized. Re-routing to initialization gateway.");
+                    window.location.reload();
                     return;
                 }
 
@@ -1188,5 +1256,6 @@
         ];
         inputsArr.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', calculate); });
     </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"b12ff839304246adb801da7b8bab136a","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
