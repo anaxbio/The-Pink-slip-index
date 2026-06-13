@@ -772,8 +772,31 @@
                         statusDiv.style.background = '#064e3b';
                         statusDiv.style.border = '1px solid #047857';
                         statusDiv.style.color = '#6ee7b7';
-                        statusDiv.innerText = "Payment Successful! Your access email has been whitelisted on the ledger document. Launch the Premium Vault workspace and authenticate using your Google Profile to unlock the deck.";
-                        btn.innerText = "Identity Whitelisted";
+                        
+                        btn.style.display = 'none';
+
+                        let timeLeft = 4;
+                        const messages = [
+                            "Finalizing authorization...",
+                            "Unlocking vault access...",
+                            "Securing premium ledger...",
+                            "Validating transaction..."
+                        ];
+                        
+                        statusDiv.innerHTML = `<div style="text-align:center; padding:10px;"><div style="font-size:2.5rem; font-family:'JetBrains Mono', monospace; font-weight:800; color:#10B981; margin-bottom:8px;">${timeLeft}</div><div style="font-size:0.95rem; text-transform:uppercase; letter-spacing:0.05em;">${messages[timeLeft-1]}</div></div>`;
+
+                        const countdownInterval = setInterval(() => {
+                            timeLeft--;
+                            if (timeLeft > 0) {
+                                statusDiv.innerHTML = `<div style="text-align:center; padding:10px;"><div style="font-size:2.5rem; font-family:'JetBrains Mono', monospace; font-weight:800; color:#10B981; margin-bottom:8px;">${timeLeft}</div><div style="font-size:0.95rem; text-transform:uppercase; letter-spacing:0.05em;">${messages[timeLeft-1]}</div></div>`;
+                            } else {
+                                clearInterval(countdownInterval);
+                                statusDiv.innerHTML = `<div style="text-align:center; padding:10px;"><div style="font-size:1.2rem; font-weight:800; color:#10B981; margin-bottom:8px; text-transform:uppercase;">Vault Unlocked</div><div style="font-size:0.9rem;">Redirecting to secure workspace...</div></div>`;
+                                setTimeout(() => {
+                                    window.location.href = "vault.html";
+                                }, 800);
+                            }
+                        }, 1000);
                     },
                     "prefill": { "email": emailInput },
                     "theme": { "color": "#2563EB" }
