@@ -77,7 +77,7 @@ def safe_float(val: Any) -> float:
 
 @router.get("/market_data")
 async def get_live_market_data():
-    """Fetches the absolute latest tick for each symbol from the SQLite WAL cache."""
+    """Fetches the absolute latest tick for each symbol from the SQLite WAL cache without any fallbacks."""
     if not os.path.exists(DB_PATH):
         raise HTTPException(status_code=500, detail="Database file missing.")
     
@@ -92,19 +92,7 @@ async def get_live_market_data():
         rows = cursor.fetchall()
         conn.close()
 
-        results = {
-            "SGBOCT26": {"ltp": 7420.0, "bid": 7410.0, "ask": 7430.0, "volume": 120, "oi": 0, "timestamp": ""},
-            "SGBNOV26": {"ltp": 7480.0, "bid": 7470.0, "ask": 7490.0, "volume": 80, "oi": 0, "timestamp": ""},
-            "SGBDEC26": {"ltp": 7520.0, "bid": 7515.0, "ask": 7530.0, "volume": 45, "oi": 0, "timestamp": ""},
-            "SGBJAN27": {"ltp": 7580.0, "bid": 7570.0, "ask": 7590.0, "volume": 90, "oi": 0, "timestamp": ""},
-            "SGBFEB27": {"ltp": 7640.0, "bid": 7630.0, "ask": 7650.0, "volume": 30, "oi": 0, "timestamp": ""},
-            "GOLDPETAL30OCT26FUT": {"ltp": 7950.0, "bid": 7945.0, "ask": 7955.0, "volume": 12000, "oi": 2500, "timestamp": ""},
-            "GOLDPETAL27NOV26FUT": {"ltp": 8120.0, "bid": 8110.0, "ask": 8130.0, "volume": 4500, "oi": 1200, "timestamp": ""},
-            "GOLDPETAL18DEC26FUT": {"ltp": 8290.0, "bid": 8280.0, "ask": 8300.0, "volume": 3200, "oi": 800, "timestamp": ""},
-            "SILVERMIC30OCT26FUT": {"ltp": 92500.0, "bid": 92400.0, "ask": 92600.0, "volume": 500, "oi": 200, "timestamp": ""},
-            "SILVERMIC27NOV26FUT": {"ltp": 93400.0, "bid": 93300.0, "ask": 93500.0, "volume": 400, "oi": 150, "timestamp": ""}
-        }
-        
+        results = {}
         for r in rows:
             sym = r[0]
             results[sym] = {
