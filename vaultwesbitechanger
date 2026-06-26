@@ -815,13 +815,8 @@
             const tick = lookup[sym] || lookup[cleanSym];
             if (tick && tick.ltp > 0) return tick.ltp;
 
-            const fallbacks = {
-                "SGBOCT26": 7420.0, "SGBNOV26": 7480.0, "SGBDEC26": 7520.0, "SGBJAN27": 7580.0, "SGBFEB27": 7640.0,
-                "GOLDBEES": 78.50, "SILVERBEES": 92.20, "GOLDCASE": 785.0, "SILVERCASE": 922.0,
-                "GOLDPETAL30OCT26FUT": 7650.0, "GOLDPETAL27NOV26FUT": 7810.0, "GOLDPETAL18DEC26FUT": 7980.0,
-                "SILVERMIC30OCT26FUT": 92500.0, "SILVERMIC27NOV26FUT": 93400.0
-            };
-            return fallbacks[sym] || fallbacks[cleanSym] || 0.0;
+            // ZERO CHEATING FALLBACKS: If the live relay is dead, return exactly 0.0
+            return 0.0;
         }
 
         // ================= PORTFOLIO MATH & CALCULATION ENGINE =================
