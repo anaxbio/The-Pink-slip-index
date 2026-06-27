@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone 4 - Metals Desk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0e1117; color: #fafafa; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .card-bg { background-color: #1a1c24; border-color: #2b2f36; }
+        .input-bg { background-color: #0e1117; border: 1px solid #2b2f36; color: #fafafa; }
+        .table-header { background-color: #1a1c24; color: #a3a8b8; font-size: 0.8rem; border-bottom: 1px solid #2b2f36; }
+        .table-row { border-bottom: 1px solid #2b2f36; }
+        .table-row:hover { background-color: #222631; }
+        
+        /* Expander Reset */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0e1117; }
+        ::-webkit-scrollbar-thumb { background: #2b2f36; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #474f5e; }
+    </style>
+</head>
+<body class="p-0 m-0 overflow-x-hidden text-sm">
+
+    <div class="flex justify-between items-center px-6 py-2 border-b border-[#2b2f36] bg-[#0e1117]">
+        <div class="text-lg font-mono" id="nav-global-pnl">₹ 0.00</div>
+        <div class="text-lg font-mono tracking-widest" id="clock">00:00:00</div>
+        <div class="text-sm font-bold tracking-wider text-blue-400">ZONE 4 DESK (COMPACT)</div>
+    </div>
+    
+    <div class="max-w-[1400px] mx-auto p-4 space-y-6">
+
+        <div class="flex gap-2 items-center bg-[#1a1c24] p-3 rounded border border-[#2b2f36]">
+            <input type="text" id="vps-url" placeholder="http://127.0.0.1:8000" class="input-bg rounded px-3 py-1.5 text-xs w-64 focus:outline-none focus:border-blue-500">
+            <input type="password" id="api-key" placeholder="X-API-KEY" class="input-bg rounded px-3 py-1.5 text-xs w-48 focus:outline-none focus:border-blue-500">
+            <button id="btn-sync" class="bg-[#2b2f36] hover:bg-[#3d4351] text-white px-4 py-1.5 rounded text-xs font-bold transition-colors">Start Live Polling</button>
+            <span id="sync-status" class="text-xs font-mono ml-2 text-slate-400">Awaiting connection...</span>
+        </div>
+
+        <section>
+            <h2 class="text-xl font-bold mb-2">🎛️ Rose Target Terminal</h2>
+            <div id="rose-terminal-grid" class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <div id="rose-awaiting" class="col-span-full text-center text-slate-500 italic py-4 text-xs border border-dashed border-[#2b2f36] rounded">Engine offline.</div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-bold mb-2">📊 Contango Curves</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="card-bg border rounded overflow-hidden">
+                    <div class="bg-[#2b2f36] px-3 py-1.5 text-xs font-bold">🥇 GOLDPETAL</div>
+                    <table class="w-full text-left">
+                        <thead class="table-header"><tr><th class="px-3 py-1.5 font-medium">Roll Period</th><th class="px-3 py-1.5 font-medium text-right">Spread</th><th class="px-3 py-1.5 font-medium text-right">Yield p.a.</th></tr></thead>
+                        <tbody id="gold-contango-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="card-bg border rounded overflow-hidden">
+                    <div class="bg-[#2b2f36] px-3 py-1.5 text-xs font-bold">🥈 SILVERMIC</div>
+                    <table class="w-full text-left">
+                        <thead class="table-header"><tr><th class="px-3 py-1.5 font-medium">Roll Period</th><th class="px-3 py-1.5 font-medium text-right">Spread</th><th class="px-3 py-1.5 font-medium text-right">Yield p.a.</th></tr></thead>
+                        <tbody id="silver-contango-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-end justify-between mb-2">
+                <h2 class="text-xl font-bold">🎯 SGB Arb Matrix</h2>
+                <span class="text-xs text-slate-400">Target: >= 18.0% p.a.</span>
+            </div>
+
+            <details open class="card-bg border rounded mb-4">
+                <summary class="p-2.5 text-sm font-bold cursor-pointer text-slate-300 hover:bg-[#222631] flex justify-between items-center">
+                    <span>🔧 Configure Arbitrage Instruments & Friction</span>
+                    <span class="text-xs text-slate-500">(Click to toggle)</span>
+                </summary>
+                <div class="p-3 border-t border-[#2b2f36] grid grid-cols-1 md:grid-cols-4 gap-3 bg-[#0e1117]">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">SGB Tickers (Comma Sep):</label>
+                        <input type="text" id="arb-sgb-inputs" value="SGBOCT26, SGBNOV26, SGBDEC26, SGBJAN27" class="w-full input-bg rounded px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Future Target:</label>
+                        <input type="text" id="arb-future-input" value="GOLDPETAL30OCT26FUT" class="w-full input-bg rounded px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Trade Qty (Grams):</label>
+                        <input type="number" id="arb-qty" value="24" class="w-full input-bg rounded px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Friction Cost/g:</label>
+                        <input type="number" id="arb-friction" value="15.00" step="0.01" class="w-full input-bg rounded px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+            </details>
+
+            <div id="arb-alert-banner" class="hidden bg-red-900/30 border border-red-500/50 text-red-400 p-2 rounded mb-3 font-bold text-xs uppercase text-center tracking-widest">🚨 HIGH YIELD ARB DETECTED (> 18% p.a.) 🚨</div>
+            
+            <div class="card-bg border rounded overflow-hidden mb-3">
+                <table class="w-full text-left text-xs">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="px-3 py-2 font-medium">Pair Target</th>
+                            <th class="px-3 py-2 font-medium text-right">SGB Ask</th>
+                            <th class="px-3 py-2 font-medium text-right">Fut Bid</th>
+                            <th class="px-3 py-2 font-medium text-right">Spread</th>
+                            <th class="px-3 py-2 font-medium text-right">Credits</th>
+                            <th class="px-3 py-2 font-medium text-right">Fric/g</th>
+                            <th class="px-3 py-2 font-medium text-right">Yield</th>
+                            <th class="px-3 py-2 font-medium text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arb-matrix-tbody"></tbody>
+                </table>
+            </div>
+            <div id="arb-execution-details" class="space-y-2"></div>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-bold mb-2 mt-6">📦 Portfolio & Margin Shield</h2>
+            
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="card-bg border rounded p-3 text-center">
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">🥇 Gold P&L</div>
+                    <div id="global-gold-pnl" class="text-xl font-mono font-bold">₹ 0</div>
+                </div>
+                <div class="card-bg border rounded p-3 text-center">
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">🥈 Silver P&L</div>
+                    <div id="global-silver-pnl" class="text-xl font-mono font-bold">₹ 0</div>
+                </div>
+                <div class="card-bg border rounded p-3 text-center border-blue-500/30">
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">🎯 Net Firm P&L</div>
+                    <div id="global-net-pnl" class="text-xl font-mono font-bold">₹ 0</div>
+                </div>
+            </div>
+
+            <div id="account-ledgers-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div id="acc-awaiting" class="col-span-full text-center text-slate-500 italic py-4 text-xs border border-[#2b2f36] rounded border-dashed">Awaiting portfolio sync...</div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <section class="col-span-1 md:col-span-2 card-bg border rounded p-4 self-start">
+                <h3 class="text-lg font-bold mb-3 text-red-400">🚪 Execution: Close Position</h3>
+                <div class="mb-3">
+                    <select id="close-select" class="w-full input-bg rounded px-3 py-2 text-xs font-mono focus:border-blue-500 focus:outline-none">
+                        <option value="">-- Select DB Position --</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-3 items-end hidden" id="close-action-panel">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Qty</label>
+                        <input type="number" id="close-qty" class="w-full input-bg rounded px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Exit Price</label>
+                        <input type="number" id="close-px" class="w-full input-bg rounded px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Realized P&L</div>
+                        <div id="close-est-pnl" class="text-sm font-mono font-bold pb-1">₹ 0.00</div>
+                    </div>
+                    <div class="col-span-full mt-1">
+                        <button id="btn-confirm-exit" class="w-full bg-[#FF4D4D] hover:bg-red-600 text-white font-bold py-2 rounded text-xs transition-colors">
+                            🚨 EXECUTE & LOG TO DB
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="col-span-1 flex flex-col gap-2">
+                <details class="card-bg border rounded group">
+                    <summary class="p-2.5 text-xs font-bold cursor-pointer text-slate-300 hover:bg-[#222631]">📦 Raw DB: Gold SGBs</summary>
+                    <div class="border-t border-[#2b2f36] overflow-y-auto max-h-[200px]">
+                        <table class="w-full text-left whitespace-nowrap text-xs"><tbody id="raw-sgb-tbody"></tbody></table>
+                    </div>
+                </details>
+                <details class="card-bg border rounded group">
+                    <summary class="p-2.5 text-xs font-bold cursor-pointer text-slate-300 hover:bg-[#222631]">📦 Raw DB: Silver ETFs</summary>
+                    <div class="border-t border-[#2b2f36] overflow-y-auto max-h-[200px]">
+                        <table class="w-full text-left whitespace-nowrap text-xs"><tbody id="raw-silv-tbody"></tbody></table>
+                    </div>
+                </details>
+                <details class="card-bg border rounded group">
+                    <summary class="p-2.5 text-xs font-bold cursor-pointer text-slate-300 hover:bg-[#222631]">📦 Raw DB: MCX Shorts</summary>
+                    <div class="border-t border-[#2b2f36] overflow-y-auto max-h-[200px]">
+                        <table class="w-full text-left whitespace-nowrap text-xs"><tbody id="raw-mcx-tbody"></tbody></table>
+                    </div>
+                </details>
+            </section>
+        </div>
+
+    </div>
+
+    <script>
+        const fmtNum = (val) => new Intl.NumberFormat('en-IN').format(val);
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toTimeString().split(' ')[0]; }, 1000);
+
+        let state = {
+            marketMap: {},
+            activePositions: [], 
+            lastPositionsRaw: "" 
+        };
+
+        const staticHorizons = { "SGBOCT26": { months: 4, rolls: 0 }, "SGBNOV26": { months: 5, rolls: 1 }, "SGBDEC26": { months: 6, rolls: 2 }, "SGBJAN27": { months: 7, rolls: 3 }, "SGBFEB27": { months: 8, rolls: 4 }};
+
+        let pollingInterval = null;
+
+        function setTxt(id, text, className = null) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.innerText !== text) el.innerText = text;
+            if (className && el.className !== className) el.className = className;
+        }
+
+        document.getElementById('btn-sync').addEventListener('click', () => {
+            const btn = document.getElementById('btn-sync');
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                btn.innerText = "Start Live Polling";
+                btn.classList.replace('bg-red-600', 'bg-[#2b2f36]');
+                setTxt('sync-status', "Polling paused.");
+            } else {
+                engineCycle(); 
+                pollingInterval = setInterval(engineCycle, 2500);
+                btn.innerText = "Stop Polling";
+                btn.classList.replace('bg-[#2b2f36]', 'bg-red-600');
+            }
+        });
+
+        ['arb-sgb-inputs', 'arb-future-input', 'arb-qty', 'arb-friction'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => runArbEngine(true));
+        });
+        
+        ['close-select', 'close-qty', 'close-px'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateExitPnL);
+        });
+
+        async function engineCycle() {
+            const vpsUrl = document.getElementById('vps-url').value.replace(/\/$/, "");
+            const apiKey = document.getElementById('api-key').value;
+            if (!vpsUrl || !apiKey) return;
+
+            const headers = { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' };
+
+            try {
+                // NO fallbacks. If this fetch fails, the script jumps to the catch block immediately.
+                const [resLive, resActive] = await Promise.all([
+                    fetch(`${vpsUrl}/live_prices`, { headers }),
+                    fetch(`${vpsUrl}/active`, { headers })
+                ]);
+
+                if (resLive.ok) {
+                    const data = await resLive.json();
+                    state.marketMap = {};
+                    data.forEach(row => {
+                        state.marketMap[row.symbol] = row;
+                        state.marketMap[row.symbol.replace('FUT', '').trim()] = row;
+                    });
+                }
+
+                if (resActive.ok) {
+                    const data = await resActive.json();
+                    const positionsString = JSON.stringify(data.positions);
+                    if (positionsString !== state.lastPositionsRaw) {
+                        state.activePositions = data.positions.map(r => ({
+                            id: r[0], type: r[1], ticker: r[2], quantity: r[3], entry_price: r[4], account: r[5]
+                        }));
+                        state.lastPositionsRaw = positionsString;
+                        renderRawTables(); 
+                    }
+                }
+                setTxt('sync-status', `[LIVE] ${new Date().toLocaleTimeString()}`, "text-xs font-mono ml-2 text-emerald-400");
+                renderAll();
+            } catch (err) {
+                setTxt('sync-status', `[OFFLINE] Connection refused`, "text-xs font-mono ml-2 text-red-400");
+            }
+        }
+
+        function getEffPrice(sym) {
+            const mkt = state.marketMap[sym] || state.marketMap[sym.replace('FUT', '').trim()];
+            return (mkt && mkt.ltp > 0) ? mkt.ltp : 0.0;
+        }
+
+        function calcAnnYield(currSym, currLtp, nextSym, nextLtp) {
+            const spread = nextLtp - currLtp;
+            if (currLtp <= 0) return { spread: 0, yieldPa: 0 };
+            const match1 = currSym.match(/(\d{2})([A-Z]{3})(\d{2})/);
+            const match2 = nextSym.match(/(\d{2})([A-Z]{3})(\d{2})/);
+            let days = 30;
+            if (match1 && match2) {
+                const ms = {JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+                const d1 = new Date(2000+parseInt(match1[3]), ms[match1[2]], parseInt(match1[1]));
+                const d2 = new Date(2000+parseInt(match2[3]), ms[match2[2]], parseInt(match2[1]));
+                days = Math.max(1, Math.ceil(Math.abs(d2 - d1) / (1000*60*60*24)));
+            }
+            return { spread, yieldPa: (spread / currLtp) * (365 / days) * 100 };
+        }
+
+        function renderAll() {
+            renderRoseTerminal();
+            renderContangoDesk();
+            runArbEngine(false);
+            renderPortfolio();
+            updateCloseSelect();
+        }
+
+        function renderRoseTerminal() {
+            const grid = document.getElementById('rose-terminal-grid');
+            if (document.getElementById('rose-awaiting') && Object.keys(state.marketMap).length > 0) grid.innerHTML = '';
+            
+            let universe = new Set(["SGBOCT26", "SGBNOV26", "SGBDEC26", "SGBJAN27", "SGBFEB27"]);
+            state.activePositions.filter(p => p.type === 'SGB').forEach(p => universe.add(p.ticker));
+            
+            Array.from(universe).sort().forEach(sym => {
+                const m = state.marketMap[sym];
+                const isHeld = state.activePositions.some(p => p.ticker === sym);
+                let tLtp = m ? m.ltp : 0, bPx = m && m.best_bid > 0 ? m.best_bid : 0, bQ = m ? m.bid_qty : 0;
+                let aPx = m && m.best_ask > 0 ? m.best_ask : 0, aQ = m ? m.ask_qty : 0;
+
+                const cardId = `rose-${sym}`;
+                if (!document.getElementById(cardId)) {
+                    grid.insertAdjacentHTML('beforeend', `
+                        <div id="${cardId}" class="card-bg border rounded p-2">
+                            <div class="flex justify-between font-bold text-xs mb-1">
+                                <span>${sym}${isHeld ? ' ⭐' : ''}</span>
+                                <span id="${cardId}-ltp" class="text-orange-400 font-mono">₹${fmtNum(tLtp)}</span>
+                            </div>
+                            <div class="flex justify-between font-mono text-[10px]">
+                                <span id="${cardId}-bid" class="text-blue-400">${bPx>0?`${fmtNum(bPx)} (${bQ})`:'-'}</span>
+                                <span id="${cardId}-ask" class="text-red-400">${aPx>0?`${fmtNum(aPx)} (${aQ})`:'-'}</span>
+                            </div>
+                        </div>`);
+                } else {
+                    setTxt(`${cardId}-ltp`, `₹${fmtNum(tLtp)}`);
+                    setTxt(`${cardId}-bid`, bPx>0?`${fmtNum(bPx)} (${bQ})`:'-');
+                    setTxt(`${cardId}-ask`, aPx>0?`${fmtNum(aPx)} (${aQ})`:'-');
+                }
+            });
+        }
+
+        function buildContangoTable(tbodyId, prefix) {
+            const tbody = document.getElementById(tbodyId);
+            let contracts = Object.keys(state.marketMap).filter(k => k.includes(prefix) && k.endsWith('FUT')).sort();
+            for (let i = 0; i < contracts.length - 1; i++) {
+                const curr = contracts[i], next = contracts[i+1];
+                const ltpC = state.marketMap[curr].ltp, ltpN = state.marketMap[next].ltp;
+                if (ltpC > 0 && ltpN > 0) {
+                    const res = calcAnnYield(curr, ltpC, next, ltpN);
+                    const rowId = `cont-${curr}-${next}`;
+                    if (!document.getElementById(rowId)) {
+                        const m1=curr.match(/\d{2}[A-Z]{3}/), m2=next.match(/\d{2}[A-Z]{3}/);
+                        tbody.insertAdjacentHTML('beforeend', `
+                            <tr id="${rowId}" class="table-row">
+                                <td class="px-3 py-1 font-mono text-[10px]">${m1?m1[0]:curr} ➡️ ${m2?m2[0]:next}</td>
+                                <td id="${rowId}-sp" class="px-3 py-1 text-right text-xs">₹${fmtNum(res.spread)}${prefix==='SILVERMIC'?'/kg':''}</td>
+                                <td id="${rowId}-yld" class="px-3 py-1 text-right font-bold text-xs text-blue-400">${res.yieldPa.toFixed(2)}%</td>
+                            </tr>`);
+                    } else {
+                        setTxt(`${rowId}-sp`, `₹${fmtNum(res.spread)}${prefix==='SILVERMIC'?'/kg':''}`);
+                        setTxt(`${rowId}-yld`, `${res.yieldPa.toFixed(2)}%`);
+                    }
+                }
+            }
+        }
+
+        function renderContangoDesk() {
+            buildContangoTable('gold-contango-tbody', 'GOLDPETAL');
+            buildContangoTable('silver-contango-tbody', 'SILVERMIC');
+        }
+
+        function runArbEngine(forceRebuild) {
+            const tbody = document.getElementById('arb-matrix-tbody');
+            const alertBanner = document.getElementById('arb-alert-banner');
+            const execDetails = document.getElementById('arb-execution-details');
+            if (forceRebuild) { tbody.innerHTML = ''; execDetails.innerHTML = ''; }
+
+            const targets = document.getElementById('arb-sgb-inputs').value.split(',').map(s=>s.trim()).filter(s=>s);
+            const futTarget = document.getElementById('arb-future-input').value.trim();
+            const qty = parseFloat(document.getElementById('arb-qty').value) || 24;
+            const fric = parseFloat(document.getElementById('arb-friction').value) || 15.0;
+
+            const fData = state.marketMap[futTarget];
+            const futBid = fData ? (fData.best_bid > 0 ? fData.best_bid : fData.ltp) : 0;
+            if (!futBid) return;
+
+            let isAnyAlert = false;
+            targets.forEach(sgb => {
+                const sData = state.marketMap[sgb];
+                if (!sData) return;
+                const sgbAsk = sData.best_ask > 0 ? sData.best_ask : sData.ltp;
+                if (sgbAsk > 0) {
+                    const params = staticHorizons[sgb] || { months: 6, rolls: 1 };
+                    const rawSp = futBid - sgbAsk;
+                    const credit = params.rolls * 180;
+                    const netYield = ((rawSp + credit - fric - (20/qty)) / sgbAsk) * (12 / params.months) * 100;
+                    
+                    const isAlert = netYield >= 18.0;
+                    if(isAlert) isAnyAlert = true;
+                    
+                    const statClass = isAlert ? "bg-red-900 text-red-100 px-2 py-0.5 rounded font-bold border border-red-500" : "text-slate-400";
+                    const trClass = isAlert ? "bg-red-900/10 border-b border-red-500/30" : "table-row";
+                    const rowId = `arb-${sgb}`;
+
+                    if (!document.getElementById(rowId)) {
+                        tbody.insertAdjacentHTML('beforeend', `
+                            <tr id="${rowId}" class="${trClass}">
+                                <td class="px-3 py-1.5 font-bold">${sgb}</td>
+                                <td id="${rowId}-a" class="px-3 py-1.5 text-right font-mono text-orange-400">₹${fmtNum(sgbAsk)}</td>
+                                <td id="${rowId}-b" class="px-3 py-1.5 text-right font-mono">₹${fmtNum(futBid)}</td>
+                                <td id="${rowId}-s" class="px-3 py-1.5 text-right font-mono">₹${fmtNum(rawSp)}</td>
+                                <td id="${rowId}-c" class="px-3 py-1.5 text-right font-mono">₹${fmtNum(credit)}</td>
+                                <td id="${rowId}-f" class="px-3 py-1.5 text-right font-mono text-slate-400">₹${(fric+(20/qty)).toFixed(2)}</td>
+                                <td id="${rowId}-y" class="px-3 py-1.5 text-right font-bold ${isAlert?'text-red-400':'text-blue-400'}">${netYield.toFixed(2)}%</td>
+                                <td class="px-3 py-1.5 text-center"><span id="${rowId}-st" class="${statClass}">${isAlert?'EXECUTE':'Hold'}</span></td>
+                            </tr>`);
+                    } else {
+                        document.getElementById(rowId).className = trClass;
+                        setTxt(`${rowId}-a`, `₹${fmtNum(sgbAsk)}`); setTxt(`${rowId}-b`, `₹${fmtNum(futBid)}`);
+                        setTxt(`${rowId}-s`, `₹${fmtNum(rawSp)}`); setTxt(`${rowId}-c`, `₹${fmtNum(credit)}`);
+                        setTxt(`${rowId}-f`, `₹${(fric+(20/qty)).toFixed(2)}`);
+                        setTxt(`${rowId}-y`, `${netYield.toFixed(2)}%`, `px-3 py-1.5 text-right font-bold ${isAlert?'text-red-400':'text-blue-400'}`);
+                        setTxt(`${rowId}-st`, isAlert?'EXECUTE':'Hold', statClass);
+                    }
+
+                    const exId = `exec-${sgb}`;
+                    if (isAlert) {
+                        if (!document.getElementById(exId)) {
+                            execDetails.insertAdjacentHTML('beforeend', `<div id="${exId}" class="bg-[#1a1c24] border border-red-500/30 p-2 rounded text-xs"><span class="text-emerald-400 font-bold">🟢 BUY:</span> ${sgb} &nbsp;&nbsp;|&nbsp;&nbsp; <span class="text-red-400 font-bold">🔴 SELL:</span> ${futTarget} @ <span id="${exId}-px">₹${fmtNum(futBid)}</span></div>`);
+                        } else setTxt(`${exId}-px`, `₹${fmtNum(futBid)}`);
+                    } else if (document.getElementById(exId)) document.getElementById(exId).remove();
+                }
+            });
+            alertBanner.style.display = isAnyAlert ? 'block' : 'none';
+        }
+
+        function renderPortfolio() {
+            const accs = {}; let gGold=0, gSilv=0;
+            state.activePositions.forEach(p => {
+                if(!accs[p.account]) accs[p.account] = { pnl:0, buf:0, hasSh:false };
+                const ltp = getEffPrice(p.ticker);
+                if(ltp<=0) return;
+                
+                let pnl = p.type==='MCX_SHORT' ? (p.entry_price - ltp)*p.quantity : (ltp - p.entry_price)*p.quantity;
+                if(p.type==='MCX_SHORT'){ accs[p.account].buf += (ltp*p.quantity)*0.10; accs[p.account].hasSh = true; }
+                
+                if(p.ticker.includes("GOLDPETAL")||p.type==='SGB') gGold += pnl;
+                if(p.ticker.includes("SILVER")) gSilv += pnl;
+                accs[p.account].pnl += pnl;
+            });
+
+            const net = gGold + gSilv;
+            setTxt('global-gold-pnl', `₹${fmtNum(gGold.toFixed(0))}`, `text-xl font-mono font-bold ${gGold>=0?'text-emerald-400':'text-red-400'}`);
+            setTxt('global-silver-pnl', `₹${fmtNum(gSilv.toFixed(0))}`, `text-xl font-mono font-bold ${gSilv>=0?'text-emerald-400':'text-red-400'}`);
+            setTxt('global-net-pnl', `₹${fmtNum(net.toFixed(0))}`, `text-xl font-mono font-bold ${net>=0?'text-blue-400':'text-red-400'}`);
+            setTxt('nav-global-pnl', `₹${fmtNum(net.toFixed(0))}`, `text-lg font-mono ${net>=0?'text-blue-400':'text-red-400'}`);
+
+            const grid = document.getElementById('account-ledgers-grid');
+            if (document.getElementById('acc-awaiting') && Object.keys(accs).length > 0) grid.innerHTML = '';
+
+            Object.keys(accs).sort().forEach(a => {
+                const d = accs[a], cId = `acc-${a.replace(/\s/g,'-')}`;
+                let sh = `<div class="mt-2 bg-[#2b2f36] text-slate-400 text-[10px] px-2 py-1 rounded text-center">No Active Shorts</div>`;
+                if(d.hasSh) sh = d.pnl<0 ? `<div class="mt-2 bg-red-900/30 text-red-400 text-[10px] px-2 py-1 rounded border border-red-500/30 text-center font-bold">⚠️ Buffer: ₹${fmtNum(d.buf.toFixed(0))}</div>` : `<div class="mt-2 bg-emerald-900/30 text-emerald-400 text-[10px] px-2 py-1 rounded border border-emerald-500/30 text-center">✅ Safe (Buf: ₹${fmtNum(d.buf.toFixed(0))})</div>`;
+                
+                if(!document.getElementById(cId)) {
+                    grid.insertAdjacentHTML('beforeend', `<div id="${cId}" class="card-bg border rounded p-3"><div class="font-bold text-xs mb-1">🏢 ${a}</div><div class="text-[10px] text-slate-400">Net: <span id="${cId}-p" class="font-mono text-slate-200">₹${fmtNum(d.pnl.toFixed(0))}</span></div><div class="text-[10px] text-slate-400">MTM: <span id="${cId}-m" class="font-mono font-bold ${d.pnl>=0?'text-emerald-400':'text-red-400'}">₹${fmtNum(d.pnl.toFixed(0))}</span></div><div id="${cId}-s">${sh}</div></div>`);
+                } else {
+                    setTxt(`${cId}-p`, `₹${fmtNum(d.pnl.toFixed(0))}`);
+                    setTxt(`${cId}-m`, `₹${fmtNum(d.pnl.toFixed(0))}`, `font-mono font-bold ${d.pnl>=0?'text-emerald-400':'text-red-400'}`);
+                    document.getElementById(`${cId}-s`).innerHTML = sh;
+                }
+            });
+        }
+
+        function renderRawTables() {
+            const rows = (arr) => arr.map(p => `<tr><td class="px-2 py-1 font-mono">${p.ticker}</td><td class="px-2 py-1 text-right">${p.quantity}</td><td class="px-2 py-1 text-right">₹${p.entry_price}</td></tr>`).join('');
+            document.getElementById('raw-sgb-tbody').innerHTML = rows(state.activePositions.filter(p=>p.type==='SGB'));
+            document.getElementById('raw-silv-tbody').innerHTML = rows(state.activePositions.filter(p=>p.type==='SILVER_ETF'));
+            document.getElementById('raw-mcx-tbody').innerHTML = rows(state.activePositions.filter(p=>p.type==='MCX_SHORT'));
+        }
+
+        function updateCloseSelect() {
+            const sel = document.getElementById('close-select');
+            if (sel.options.length - 1 !== state.activePositions.length) {
+                const cur = sel.value;
+                sel.innerHTML = '<option value="">-- Select DB Position --</option>';
+                state.activePositions.forEach(p => sel.add(new Option(`${p.account} | ${p.type} ${p.quantity}x ${p.ticker}`, JSON.stringify(p))));
+                if(cur && Array.from(sel.options).some(o=>o.value===cur)) sel.value = cur;
+                else document.getElementById('close-action-panel').classList.add('hidden');
+            }
+        }
+
+        function calculateExitPnL() {
+            const sel = document.getElementById('close-select').value;
+            const pnl = document.getElementById('close-action-panel');
+            if(!sel){ pnl.classList.add('hidden'); return; }
+            
+            pnl.classList.remove('hidden');
+            const pos = JSON.parse(sel), qIn = document.getElementById('close-qty'), pxIn = document.getElementById('close-px');
+            if(!qIn.value) qIn.value = pos.quantity;
+            if(!pxIn.value) pxIn.value = getEffPrice(pos.ticker) || pos.entry_price;
+
+            const exitPx = parseFloat(pxIn.value) || 0, qty = parseFloat(qIn.value) || 0;
+            const rPnl = pos.type==='MCX_SHORT' ? (pos.entry_price - exitPx)*qty : (exitPx - pos.entry_price)*qty;
+            
+            setTxt('close-est-pnl', `₹${fmtNum(rPnl.toFixed(2))}`, `text-sm font-mono font-bold pb-1 ${rPnl>=0?'text-emerald-400':'text-red-400'}`);
+            document.getElementById('btn-confirm-exit').dataset.p = JSON.stringify({id: pos.id, px: exitPx, pnl: rPnl});
+        }
+
+        document.getElementById('btn-confirm-exit').addEventListener('click', async () => {
+            const str = document.getElementById('btn-confirm-exit').dataset.p;
+            if(!str) return;
+            const btn = document.getElementById('btn-confirm-exit'), p = JSON.parse(str);
+            const url = document.getElementById('vps-url').value.replace(/\/$/,""), key = document.getElementById('api-key').value;
+            
+            btn.innerText = "EXECUTING...";
+            try {
+                const res = await fetch(`${url}/trade/close?pos_id=${p.id}&exit_price=${p.px}&realized_pnl=${p.pnl}`, { method: 'POST', headers: {'X-API-KEY': key} });
+                if(res.ok) {
+                    btn.classList.replace('bg-[#FF4D4D]', 'bg-emerald-600'); btn.innerText = "✅ TRADE LOGGED";
+                    setTimeout(() => {
+                        document.getElementById('close-select').value = ""; document.getElementById('close-action-panel').classList.add('hidden');
+                        btn.classList.replace('bg-emerald-600', 'bg-[#FF4D4D]'); btn.innerText = "🚨 EXECUTE & LOG TO DB";
+                        engineCycle(); 
+                    }, 1500);
+                } else throw new Error();
+            } catch(e) { alert("Execution Failed. Check API."); btn.innerText = "🚨 EXECUTE & LOG TO DB"; }
+        });
+    </script>
+</body>
+</html>
