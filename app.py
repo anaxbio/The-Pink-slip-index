@@ -1,100 +1,89 @@
-import os
-import asyncio
 import sqlite3
 from fastapi import FastAPI, Header, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from contextlib import asynccontextmanager
+from typing import List
 
-# --- STRICT IN-MEMORY CACHE ---
-live_market_cache = []
+app = FastAPI()
 
-async def fetch_live_prices_background():
-    """
-    Raw execution loop. 
-    Insert your actual Google Sheets/API fetch logic here. 
-    No try/except fallbacks. If it throws an error, the task dies.
-    """
-    while True:
-        # EXECUTE YOUR REAL FETCH HERE
-        # Example: 
-        # raw_data = your_gsheets_client.get_all_records()
-        # live_market_cache.clear()
-        # live_market_cache.extend(raw_data)
-        
-        await asyncio.sleep(15)
-
-# --- LIFESPAN MANAGER ---
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    task = asyncio.create_task(fetch_live_prices_background())
-    yield
-    task.cancel()
-
-app = FastAPI(lifespan=lifespan)
-
-# --- CONFIG & SECURITY ---
 DB_NAME = "trading_dashboard.db"
-API_KEY = os.getenv("ZONE4_API_KEY") 
 
-async def verify_key(x_api_key: str = Header(...)):
-    if not API_KEY or x_api_key != API_KEY:
-        raise HTTPException(status_code=403, detail="Invalid API Key")
+# Minimal middleware connection
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class NewTrade(BaseModel):
-    position_type: str
-    ticker: str
-    quantity: float
-    entry_price: float
-    account: str
+def get_db_connection():
+    return sqlite3.connect(DB_NAME, check_same_thread=False, timeout=10)
 
-# --- THE FIREHOSE ENDPOINT ---
-@app.get("/live_prices", dependencies=[Depends(verify_key)])
-async def get_live_prices():
-    # Returns exactly what is in the cache, nothing else.
-    return live_market_cache
+# --- Define the data structure for incoming price updates ---
+class PriceUpdate(BaseModel):
+    symbol: str
+    ltp: float
+    best_bid: float
+    bid_qty: int
+    best_ask: float
+    ask_qty: int
 
-# --- EXISTING ENDPOINTS ---
-@app.get("/active", dependencies=[Depends(verify_key)])
+# --- MATCHES LINE 179: index.html expects raw index tuples r[0], r[1] ---
+@app.get("/active")
 async def get_active():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM active_positions")
-    rows = cursor.fetchall()
+    cursor.execute("SELECT id, position_type, ticker, quantity, entry_price, account FROM active_positions")
+    rows = cursor.fetchall()  # Returns raw tuples: (1, 'SGB', 'SGBDEC26', 10, 13550.0, 'Primary')
     conn.close()
     return {"positions": rows}
 
-@app.get("/closed", dependencies=[Depends(verify_key)])
-async def get_closed():
-    conn = sqlite3.connect(DB_NAME)
+# --- 1. THE RETRIEVAL SYSTEM (Replaces Dummy Data) ---
+# MATCHES LINE 169: index.html expects a flat array of objects with .symbol and .ltp
+@app.get("/live_prices")
+async def get_live_prices():
+    conn = get_db_connection()
+    conn.row_factory = sqlite3.Row # Allows us to fetch as dictionaries
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM closed_metals")
+
+    # Pulling 100% real data from the database
+    cursor.execute("SELECT symbol, ltp, best_bid, bid_qty, best_ask, ask_qty FROM market_prices")
     rows = cursor.fetchall()
     conn.close()
-    return {"history": rows}
 
-@app.post("/positions/add", dependencies=[Depends(verify_key)])
-async def add_position(trade: NewTrade):
-    conn = sqlite3.connect(DB_NAME)
+    # Convert sqlite3.Row objects to standard Python dictionaries for the JSON response
+    return [dict(row) for row in rows]
+
+# --- 2. THE UPDATE SYSTEM (Feeds the Database) ---
+@app.post("/live_prices/update")
+async def update_live_prices(prices: List[PriceUpdate]):
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO active_positions (position_type, ticker, quantity, entry_price, account) VALUES (?, ?, ?, ?, ?)",
-        (trade.position_type, trade.ticker, trade.quantity, trade.entry_price, trade.account)
-    )
+
+    # UPSERT Logic: Insert new row, or update existing row if the symbol already exists
+    for p in prices:
+        cursor.execute("""
+            INSERT INTO market_prices (symbol, ltp, best_bid, bid_qty, best_ask, ask_qty)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(symbol) DO UPDATE SET
+                ltp=excluded.ltp,
+                best_bid=excluded.best_bid,
+                bid_qty=excluded.bid_qty,
+                best_ask=excluded.best_ask,
+                ask_qty=excluded.ask_qty,
+                last_updated=CURRENT_TIMESTAMP
+        """, (p.symbol, p.ltp, p.best_bid, p.bid_qty, p.best_ask, p.ask_qty))
+
+    conn.commit()
+    conn.close()
+    return {"status": "success", "updated_count": len(prices)}
+
+@app.post("/trade/close")
+async def close_trade(pos_id: int, exit_price: float, realized_pnl: float):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM active_positions WHERE id = ?", (pos_id,))
     conn.commit()
     conn.close()
     return {"status": "success"}
-
-@app.post("/trade/close", dependencies=[Depends(verify_key)])
-async def close_trade(pos_id: int, exit_price: float, realized_pnl: float):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM active_positions WHERE id = ?", (pos_id,))
-    row = cursor.fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Position not found")
-    
-    # Logic to move to closed_metals goes here
-    
-    conn.close()
-    return {"status": "closed"}
